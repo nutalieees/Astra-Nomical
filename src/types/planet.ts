@@ -73,6 +73,7 @@ export interface Planet {
     | "ultra-hot"
     | "mini-neptune"
     | "super-earth"
+    | "gas-giant"
     | "circumbinary"
     | "directly-imaged"
     | "pulsar-planet"

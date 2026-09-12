@@ -2,213 +2,255 @@
 
 This package is the **data-prep layer** for Astra-Nomical, done ahead of the
 5-hour hackathon window per AGENTS.md. It does not implement the app — it
-gives you typed, structured scaffolding so that on the day, filling in real
-numbers is a fetch-and-paste exercise instead of a research project.
+gives you real, sourced planetary data plus working, tested derivation
+logic, so the hackathon itself starts from "wire up the renderer" rather
+than "go find astronomical data."
 
-Everything here is **scaffold-only**: file structure, types, and
-deterministic logic are real and usable as-is; every field that requires an
-external measurement is currently `undefined` and needs one fetch pass
-against the NASA Exoplanet Archive before the app ships.
+**Status: real data, not a scaffold.** Every numeric field in the three
+planet datasets below was fetched from the NASA Exoplanet Archive on
+2026-09-12 (composite parameters table, `pscomppars`, 6,366 confirmed
+planets at time of fetch). Where the archive itself has no value for a
+field, it's left `undefined` — never invented — and `deriveEnvironment()`'s
+fallback hierarchy (§5) takes over safely at render time.
 
 ---
 
 ## 1. What's in this package
 
 ```text
-README.md                                 ← you are here
+README.md
 src/
 ├── types/
-│   ├── planet.ts                         ← Planet interface (+ provenance type)
-│   ├── environment.ts                    ← PlanetEnvironment interface
-│   └── alien.ts                          ← AlienSimulation interface (Evolve Life contract)
+│   ├── planet.ts                    ← Planet interface (+ provenance type)
+│   ├── environment.ts               ← PlanetEnvironment interface
+│   └── alien.ts                     ← AlienSimulation interface (Evolve Life contract)
 └── lib/
     └── astronomy/
-        ├── constants.ts                  ← physical constants + heuristic thresholds
-        ├── environment.ts                ← deriveEnvironment() — REAL, working logic
-        ├── planets-featured.ts           ← the 5 demo-safe planets (scaffold)
-        └── planets-buffer.ts             ← 40 curated buffer planets (scaffold)
+        ├── constants.ts             ← physical constants, RECALIBRATED against real data (see §6)
+        ├── environment.ts           ← deriveEnvironment() — real, tested logic
+        ├── planets-featured.ts      ← 5 demo-safe planets, REAL data
+        ├── planets-buffer.ts        ← 40 curated buffer planets, REAL data
+        ├── planets-extended.json    ← 6,271 remaining confirmed planets, REAL data
+        └── planets-extended.ts      ← typed loader for the JSON above
 docs/
-└── eyes-on-exoplanets-data-spec.md       ← spec only, no data — for the stretch orbital-map idea
+└── eyes-on-exoplanets-data-spec.md  ← spec only, no data — for the stretch orbital-map idea
 ```
-
-Two things are already fully real and don't need a data pass:
-
-- **`environment.ts`** — `deriveEnvironment()` is fully implemented with
-  real formulas (gravity, star color, apparent star size, illumination,
-  temperature category, atmosphere preset) and a working fallback
-  hierarchy. It runs correctly right now even with every planet field
-  `undefined` — try it.
-- **`planets-buffer.ts` names/categories/notableFact** — real, curated
-  metadata about 40 actual confirmed exoplanets. Only the *numeric* fields
-  on each are placeholders.
 
 ---
 
-## 2. The single data source: NASA Exoplanet Archive
+## 2. The three planet datasets
 
-Use the **Planetary Systems Composite Parameters** table (`pscomppars`) via
-the archive's TAP (Table Access Protocol) sync API. This table is specifically
-built to give one best-value row per planet (reconciling multiple discovery
-papers), which is what you want instead of raw per-publication tables.
+All three come from the same source and the same fetch pass, just at
+different levels of curation:
 
-Base endpoint:
+**`planets-featured.ts` (5 planets)** — TRAPPIST-1 e, Proxima Centauri b,
+55 Cancri e, WASP-121 b, Kepler-186 f. Every field is real, plus a
+hand-checked `FEATURED_PLANETS_PROVENANCE` table and a `notableFact` per
+planet. This is what the demo must never depend on the network for —
+these values ship hardcoded.
+
+**`planets-buffer.ts` (40 planets)** — curated across 9 categories (rocky
+habitable-zone, super-Earth, ultra-hot/lava, ordinary hot Jupiter,
+mini-Neptune, directly-imaged, circumbinary, pulsar-planet, oddities), each
+with a real `notableFact` and category tag, for scope-flex if you want more
+variety on the day. `bufferCategoryCounts()` sanity-checks the balance.
+A couple of entries carry a `⚠️` caution note (K2-18 b's contested
+"biosignature" claims, Kepler-1625 b's disputed exomoon, HR 8799 c/e's
+`equilibriumTemperatureK` actually reflecting measured intrinsic heat from
+a young still-forming planet rather than insolation) — read those before
+they reach user-facing copy.
+
+**`planets-extended.json` / `planets-extended.ts` (6,271 planets)** — every
+other confirmed planet in the archive with at least a measured radius (50
+planets had no radius at all and were dropped entirely, per your call).
+Shipped as JSON, not a TypeScript literal — at this size a `.ts` file would
+be a multi-megabyte, slow-to-compile source file for no benefit; JSON
+loaded via `import`/`fetch` is the normal way to ship a static dataset this
+large. Import `planets-extended.ts` to get it back out as typed `Planet[]`.
+
+Two honest trade-offs at this scale, versus the curated 45:
+- No hand-written `notableFact` per planet — not feasible for 6,271 entries.
+- `category` is **auto-derived** from radius/temperature/discovery method
+  (see the classifier logic embedded in the build step — reproduced below),
+  not hand-picked. `name`/`starName` are the archive's own strings verbatim,
+  not cleaned up into nicer display forms the way the curated 45 were.
+
+Category breakdown of the extended set:
+
+| category | count |
+|---|---|
+| mini-neptune | 2,277 |
+| gas-giant | 1,044 |
+| ultra-hot | 980 |
+| hot-jupiter | 956 |
+| super-earth | 878 |
+| directly-imaged | 90 |
+| rocky-habitable-zone | 42 |
+| pulsar-planet | 4 |
+
+Classifier logic (discovery method checked first, then radius/temperature):
 
 ```
-https://exoplanetarchive.ipac.caltech.edu/TAP/sync
+Pulsar Timing            → pulsar-planet
+Imaging                  → directly-imaged
+radius ≤ 1.8 R⊕:
+  200K ≤ eqT ≤ 320K       → rocky-habitable-zone
+  eqT > 1000K             → ultra-hot
+  else                    → super-earth
+1.8 < radius ≤ 4 R⊕:
+  eqT > 1500K             → ultra-hot
+  else                    → mini-neptune
+radius > 4 R⊕:
+  eqT > 1500K             → ultra-hot
+  eqT ≥ 500K              → hot-jupiter
+  else                    → gas-giant
 ```
 
-Example query for a single planet, returned as JSON:
-
-```
-https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+pl_name,hostname,pl_rade,pl_bmasse,pl_orbsmax,pl_orbper,pl_orbeccen,pl_eqt,st_rad,st_teff,st_spectype,st_mass,sy_dist,disc_year,discoverymethod+from+pscomppars+where+pl_name+=+%27TRAPPIST-1+e%27&format=json
-```
-
-For a batch (the 5 featured, or all 40 buffer planets at once), use an `IN (...)`
-clause instead of repeated single calls:
-
-```
-...where+pl_name+in+(%27TRAPPIST-1+d%27,%27TRAPPIST-1+f%27,%27Kepler-452+b%27,...)&format=json
-```
-
-Column → `Planet` field mapping:
-
-| Archive column     | `Planet` field              | Notes                                                    |
-|---------------------|------------------------------|-----------------------------------------------------------|
-| `pl_name`           | `name`                       |                                                             |
-| `pl_rade`           | `radiusEarth`                | already in Earth radii                                     |
-| `pl_bmasse`         | `massEarth`                  | "best mass" — may mix true mass and RV minimum mass (m·sin i) |
-| `pl_orbsmax`        | `orbitalDistanceAU`          |                                                             |
-| `pl_orbper`         | `orbitalPeriodDays`          |                                                             |
-| `pl_orbeccen`       | `orbitalEccentricity`        | often null for small/faint planets — safe to leave blank    |
-| `pl_eqt`            | `equilibriumTemperatureK`    | archive's own zero-albedo estimate, when available          |
-| `hostname`          | `starName`                   |                                                             |
-| `st_rad`            | `starRadiusSolar`            |                                                             |
-| `st_teff`           | `starTemperatureK`           |                                                             |
-| `st_spectype`       | `starSpectralType`           | free-text field, often messy — trim to first letter for lookups |
-| `st_mass`           | `starMassSolar`              |                                                             |
-| `sy_dist`           | `distanceLightYears`         | archive reports in parsecs (`sy_dist`) — convert: `ly = parsecs × 3.2616` |
-| `disc_year`         | `discoveryYear`              |                                                             |
-| `discoverymethod`   | `discoveryMethod`            |                                                             |
-
-Gas giants reported in Jupiter units (`pl_radj`, `pl_bmassj`) need converting:
-`1 Jupiter radius ≈ 11.21 Earth radii`, `1 Jupiter mass ≈ 317.8 Earth masses`.
-
-Full column reference: https://exoplanetarchive.ipac.caltech.edu/docs/API_queries.html
+Note `circumbinary` doesn't appear here — it can't be auto-detected from
+the columns fetched (would need a different archive field), so it only
+exists in the hand-curated 40.
 
 ---
 
-## 3. Fill-in checklist
+## 3. Data source & methodology
 
-1. Run the batch query above for the 5 names in `planets-featured.ts`.
-2. Run it again (or in one combined `IN (...)` call) for the 40 names in
-   `planets-buffer.ts`.
-3. For each returned row, replace the matching `undefined` field. Convert
-   units where noted above.
-4. Where the archive returns `null` for a field, **leave it `undefined`** —
-   do not invent a number. `deriveEnvironment()` already has a real
-   fallback for every field that can be missing (see §5).
-5. Update `FEATURED_PLANETS_PROVENANCE` in `planets-featured.ts` if any
-   field's actual provenance differs from the pre-filled guess (e.g. if
-   the archive shows an eccentricity was actually measured, not assumed).
-6. Spot-check anything flagged with a `⚠️` comment in `planets-buffer.ts`
-   before it reaches user-facing copy — those are scientifically
-   contested points (K2-18 b "biosignature" claims, Kepler-1625 b's
-   disputed exomoon), not settled facts.
-7. Sanity-check for `NaN`/impossible values (negative radius, temperature
-   of 0K, etc.) before shipping — the archive occasionally has data
-   entry quirks in edge-case columns.
+**NASA Exoplanet Archive**, Planetary Systems Composite Parameters table
+(`pscomppars`), fetched via the TAP sync API on 2026-09-12. This table
+gives one best-value row per confirmed planet (reconciling multiple
+discovery papers), rather than one row per publication.
+
+Column → `Planet` field mapping used throughout:
+
+| Archive column | `Planet` field | Notes |
+|---|---|---|
+| `pl_name` | `name` | archive's own string for extended set; cleaned up for the curated 45 |
+| `pl_rade` | `radiusEarth` | already in Earth radii |
+| `pl_bmasse` | `massEarth` | "best mass" — mixes true mass, RV minimum mass (m·sin i), and in some cases model estimates |
+| `pl_orbsmax` | `orbitalDistanceAU` | |
+| `pl_orbper` | `orbitalPeriodDays` | |
+| `pl_orbeccen` | `orbitalEccentricity` | often null/unconstrained for small or faint planets |
+| `pl_eqt` | `equilibriumTemperatureK` | archive's zero-albedo estimate; for young directly-imaged giants this can reflect measured intrinsic heat instead — see HR 8799 caveat above |
+| `hostname` | `starName` | |
+| `st_rad` | `starRadiusSolar` | |
+| `st_teff` | `starTemperatureK` | |
+| `st_spectype` | `starSpectralType` | free-text, ~62% null across the full archive; safe to leave blank |
+| `st_mass` | `starMassSolar` | |
+| `sy_dist` | `distanceLightYears` | archive reports parsecs (`sy_dist`) — converted here via `ly = parsecs × 3.2616` |
+| `disc_year` | `discoveryYear` | |
+| `discoverymethod` | `discoveryMethod` | |
+
+If you need to re-fetch or extend this later, the same query pattern works
+for any batch of names:
+
+```
+https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+pl_name,hostname,pl_rade,pl_bmasse,pl_orbsmax,pl_orbper,pl_orbeccen,pl_eqt,st_rad,st_teff,st_spectype,st_mass,sy_dist,disc_year,discoverymethod+from+pscomppars+where+pl_name+in+(%27<name1>%27,%27<name2>%27)&format=json
+```
+
+or, with no `WHERE` clause at all, the full table (what the extended
+dataset was built from). Full column reference:
+https://exoplanetarchive.ipac.caltech.edu/docs/API_queries.html
+
+**Naming gotcha worth remembering:** the archive uses abbreviated
+constellation/catalog names, not common names — e.g. `55 Cnc e` not
+"55 Cancri e", `51 Peg b` not "51 Pegasi b", `bet Pic b` not
+"Beta Pictoris b", `Proxima Cen b` not "Proxima Centauri b". The curated 45
+map their nicer display names to the correct archive key; if you look up
+something new, use the archive's own search box rather than guessing.
 
 ---
 
 ## 4. Measured / derived / assumed / speculative
 
-Per AGENTS.md §6, the app must never claim more certainty than it has.
-This package treats those four tiers as:
+Per AGENTS.md §6, the app must never claim more certainty than it has:
 
-- **Measured** — came directly from an archive column for that specific
-  planet (e.g. `pl_rade` for a well-studied transiting planet).
+- **Measured** — direct from an archive column for that planet.
 - **Derived** — computed deterministically from other measured fields
-  (e.g. gravity from mass + radius; illumination from stellar luminosity
-  and orbital distance). No external lookup, just physics.
+  (gravity from mass+radius, illumination from stellar luminosity and
+  orbital distance). Pure physics, no external lookup.
 - **Assumed** — a scientifically reasonable stand-in used because the
-  measurement doesn't exist for this planet (e.g. mass estimated from
-  radius via a published mass-radius relation; star temperature estimated
+  measurement doesn't exist (mass from a radius relation, star temperature
   from spectral type).
-- **Speculative** — anything from "Evolve Life" (GPT-6 Astra). Never
-  mix this tier with the other three in the UI.
+- **Speculative** — anything from "Evolve Life" (GPT-6 Astra). Never mix
+  this tier with the other three in the UI.
 
-`PlanetFieldProvenance` (in `types/planet.ts`) exists to track tiers 1–3
-per field. `PlanetEnvironment.assumptions` (populated automatically by
-`deriveEnvironment()`) is the human-readable version already wired up for
-the UI.
+`FEATURED_PLANETS_PROVENANCE` in `planets-featured.ts` tracks this per
+field for the 5 demo planets, confirmed against the actual fetch (e.g.
+Kepler-186 f's mass is flagged `"derived"` — the archive's own value for it
+is a model-based estimate, not a direct measurement). `PlanetEnvironment.assumptions`
+(auto-populated by `deriveEnvironment()`) is the runtime, human-readable
+version of the same idea, and covers all 6,316 planets automatically —
+provenance tracking doesn't scale to hand-authoring per planet, so the
+extended set relies entirely on this runtime mechanism.
 
 ---
 
-## 5. How `deriveEnvironment()`'s fallback hierarchy actually works
+## 5. How `deriveEnvironment()`'s fallback hierarchy works
 
-For every input it needs, in order:
-
-1. Use the measured value if present.
-2. If missing, compute it from other measured fields (documented inline
-   in `environment.ts` — e.g. star color from temperature via a blackbody
-   approximation, gravity from a mass-radius relation when mass is
-   unmeasured).
-3. If that's not possible either, fall back to a scientifically reasonable
-   default (`constants.ts` → `SAFE_DEFAULTS`), and log a plain-English
-   note into `assumptions[]`.
-4. The function is guaranteed to never return `NaN`, an invalid CSS
-   color, or a zero/negative value that would break the 3D scene — this
-   was tested by calling it with a completely empty planet object.
-
-This means you can safely wire the renderer up against
-`planets-featured.ts` and `planets-buffer.ts` **right now**, before any
-real data is filled in — everything will render with safe Earth-like
-defaults, and get progressively more accurate/differentiated as you fill
-in real values.
+For every input it needs, in order: use the measured value if present;
+else compute it from other measured fields (star color from temperature
+via blackbody approximation, gravity from a mass-radius relation when mass
+is unmeasured); else fall back to a physically reasonable default
+(`constants.ts` → `SAFE_DEFAULTS`) and log a plain-English note into
+`assumptions[]`. It's guaranteed to never return `NaN`, an invalid CSS
+color, or a zero/negative value — tested against an empty planet object, a
+partial planet (radius only), and a fully-specified Earth analog, all
+passing.
 
 **One real-physics quirk to expect, not a bug:** a plain Earth analog
 (1 R⊕, 1 AU, Sun-like star) categorizes as `"cold"` (~255K), not
-`"temperate"`. That's correct — the zero-albedo equilibrium/blackbody
-temperature the archive reports is genuinely below freezing; Earth's
-actual 288K surface average comes from greenhouse warming, which isn't
-modeled here (and generally can't be, since real exoplanet atmospheric
-composition is usually unknown — see AGENTS.md §6). If a demo planet's
-"temperature category" looks colder than you'd intuitively expect, this
-is almost always why — not a math error.
+`"temperate"`. The zero-albedo equilibrium/blackbody temperature is
+genuinely below freezing; Earth's actual 288K surface average comes from
+greenhouse warming, which isn't modeled here (real exoplanet atmospheric
+composition is usually unknown — AGENTS.md §6). Not a math error.
 
 ---
 
-## 6. The 40-planet buffer set
+## 6. Recalibration against the full archive (2026-09-12)
 
-`planets-buffer.ts` is a scope-flex safety net, kept deliberately separate
-from the 5 production-critical planets. It's curated across 9 categories
-(rocky habitable-zone, super-Earth, ultra-hot/lava, ordinary hot Jupiter,
-mini-Neptune, directly-imaged, circumbinary, pulsar-planet, and oddities)
-so that if scope changes on the day — more planets, a "browse the
-catalogue" mode, more visual variety — there's already a scientifically
-diverse, real, named set ready to fetch data for, rather than needing to
-research new planets under time pressure.
+Two things were checked against the real, full 6,366-planet population
+before finalizing `constants.ts`:
 
-Run `bufferCategoryCounts()` (exported from that file) any time you want
-to sanity-check the category balance after edits.
+**Mass-radius relation — recalibrated.** Previously used a textbook
+piecewise fit (Weiss & Marcy 2014). Replaced with a log-log linear
+regression fit directly against the archive: rocky regime (R ≤ 1.5 R⊕,
+n=1,012 planets with both mass and radius measured) gives
+`M ≈ 1.204 × R^2.569`; sub-Neptune regime (1.5 < R ≤ 4 R⊕, n=2,847) gives
+`M ≈ 1.685 × R^1.654`. This was preferred because it's also more
+self-consistent at the regime boundary (R=1.5 R⊕: the two pieces agree to
+within ~7%, versus ~37% disagreement using the literature fit) and
+reproduces Neptune's real mass reasonably well at its actual radius.
+Caveat, documented in `constants.ts`: the archive's "best mass" column
+mixes measurement quality tiers (true mass, RV minimum mass, TTV, model
+estimates), so treat this as a practical empirical approximation, not a
+rigorously derived law.
+
+**Temperature categories and atmosphere-heuristic thresholds — checked,
+deliberately left unchanged.** The population's median equilibrium
+temperature is ~756K (transit/RV surveys are best at finding close-in, hot
+planets — strong detection bias), and 5th-percentile surface gravity is
+0.65g (low-gravity small planets are the hardest to detect at all). Both
+findings confirmed that re-centering these thresholds on population
+percentiles would just re-encode detection bias as physics, not improve
+the science. They stay anchored to absolute reference points (Earth,
+Venus, Mercury) instead — the full reasoning is documented inline in
+`constants.ts`.
 
 ---
 
 ## 7. Eyes-on-Exoplanets-style stretch feature
 
-See `docs/eyes-on-exoplanets-data-spec.md`. This is a **spec document only**
-— no numeric data has been pulled for it. It exists so that if you decide
-mid-hackathon to build an orbital-map browsing layer (closer to NASA's own
-"Eyes on Exoplanets" tool), you know exactly what additional fields you'd
-need, which of them are commonly missing, and which real multi-planet
-systems are well-characterized enough to be worth targeting first.
+See `docs/eyes-on-exoplanets-data-spec.md` — spec only, no data pulled.
+Documents the additional fields (full Keplerian orbital elements, star
+RA/Dec, multi-planet grouping) and math (Kepler orbit propagation,
+habitable-zone boundaries) needed if you build an orbital-map browsing
+layer closer to NASA's own tool, plus a candidate list of well-characterized
+multi-planet systems worth targeting first.
 
 ---
 
-## 8. What this package deliberately does NOT do
+## 8. What this package does NOT do
 
-- It does not call the NASA Exoplanet Archive for you — no live fetch has
-  been run, per your instruction to scaffold only.
 - It does not implement `deriveEnvironment()`'s consumers (3D renderer,
   HUD, Evolve Life) — those are app code, not data prep.
 - It does not touch the OpenAI/Astra side of things at all.
+- It does not attempt orbital-map-style live orbit animation — see §7.

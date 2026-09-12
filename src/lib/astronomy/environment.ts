@@ -5,6 +5,7 @@ import {
   EARTH_EQUILIBRIUM_TEMPERATURE_K,
   DEFAULT_ALBEDO_ASSUMPTION,
   SPECTRAL_TYPE_TEMPERATURE_K,
+  MASS_RADIUS_ROCKY_COEFFICIENT,
   MASS_RADIUS_ROCKY_EXPONENT,
   MASS_RADIUS_SUBNEPTUNE_COEFFICIENT,
   MASS_RADIUS_SUBNEPTUNE_EXPONENT,
@@ -92,9 +93,9 @@ export function deriveEnvironment(planet: Planet): PlanetEnvironment {
     gravityEarth = massEarth / Math.pow(radiusEarth, 2);
   } else if (radiusEarth != null && isFinite(radiusEarth) && radiusEarth > 0) {
     if (radiusEarth <= 1.5) {
-      massEarth = Math.pow(radiusEarth, MASS_RADIUS_ROCKY_EXPONENT);
+      massEarth = MASS_RADIUS_ROCKY_COEFFICIENT * Math.pow(radiusEarth, MASS_RADIUS_ROCKY_EXPONENT);
       assumptions.push(
-        `Mass not measured — estimated from radius using a rocky-planet mass-radius relation (M ≈ R^${MASS_RADIUS_ROCKY_EXPONENT}).`
+        `Mass not measured — estimated from radius using a rocky-planet mass-radius relation empirically fit to the NASA Exoplanet Archive (M ≈ ${MASS_RADIUS_ROCKY_COEFFICIENT} × R^${MASS_RADIUS_ROCKY_EXPONENT}).`
       );
     } else if (radiusEarth <= 4) {
       massEarth =
