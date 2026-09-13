@@ -18,7 +18,16 @@
     "test:evolve": "node --conditions=react-server --import tsx --test tests/evolve-life.test.ts",
     "test:frontend": "node --conditions=react-server --import tsx --test tests/evolve-life-stream.test.ts",
     "test:images": "node --conditions=react-server --import tsx --test tests/organism-image.test.ts",
-    "test:scenes": "node --conditions=react-server --import tsx --test tests/organism-scene.test.ts tests/organism-scene-client.test.ts tests/organism-geometry.test.ts"
+    "test:scenes": "node --conditions=react-server --import tsx --test tests/organism-scene.test.ts tests/organism-scene-client.test.ts tests/organism-geometry.test.ts",
+    "stars:convert": "node scripts/convert-star-data.cjs",
+    "stars:check": "node scripts/convert-star-data.cjs --check",
+    "stars:test": "node scripts/convert-star-data.test.cjs",
+    "stars:enrich": "node scripts/enrich-arduino-stars.cjs",
+    "stars:enrich:check": "node scripts/enrich-arduino-stars.cjs --check",
+    "skies:download": "node scripts/download-hyg.cjs",
+    "skies:build": "node scripts/build-planet-skies.cjs",
+    "skies:check": "node scripts/build-planet-skies.cjs --check",
+    "skies:test": "node scripts/planet-sky.test.cjs"
   },
   "dependencies": {
     "@next/env": "^15.5.25",

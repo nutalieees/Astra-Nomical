@@ -78,6 +78,7 @@ export default function Home() {
           organismScene={currentSpecimen?.scene}
           organismVisible={organismVisible}
           focusOrganism={focusOrganism}
+          onReturnToOverview={() => navigate("overview")}
         />
         <header className="world-header">
           <button className="brand-button" type="button" onClick={() => navigate("overview")}>ASTRA—NOMICAL</button>

@@ -38,21 +38,45 @@ export function createSurface(v: VisualEnvironment, seed: number, clouds = false
     const t = i / segments * 2 - 1;
     // Cloud horizon is farther away because the observer floats above a giant.
     // This extent is beyond every bounded scenario's tangent horizon in all azimuths.
-    return Math.sign(t) * t * t * (clouds ? 5000 : 850);
+    const a = Math.abs(t), inner = clouds ? 80 : 60, split = clouds ? 0.5 : 0.6;
+    const radius = a <= split ? a / split * inner : inner + Math.pow((a - split) / (1 - split), 2) * ((clouds ? 5000 : 850) - inner);
+    return Math.sign(t) * radius;
   });
   const positions = new Float32Array(count * count * 3);
+  const random = randomSource(seed + 401);
+  const craters = [{ x: 0, z: -25, radius: 23 }, ...Array.from({ length: 15 }, () => {
+    const angle = random() * Math.PI * 2, distance = 48 + random() * 210;
+    return { x: Math.cos(angle) * distance, z: 12 + Math.sin(angle) * distance, radius: 12 + random() * 26 };
+  })];
   const indices: number[] = [];
   for (let zi = 0; zi < count; zi++) for (let xi = 0; xi < count; xi++) {
     const x = coordinates[xi], z = coordinates[zi];
     const distance = Math.hypot(x, z - 12);
     const ramp = Math.min(1, distance / 28);
     const f = v.terrainFrequency;
-    const hills = relief(x * f, z * f, seed) * v.terrainAmplitude;
+    const base = relief(x * f, z * f, seed);
+    const hills = (v.landscape === "glacial" ? Math.abs(base) * 1.5 : base) * v.terrainAmplitude;
     const ridges = Math.exp(-Math.pow((distance - 85) / 33, 2)) *
       (0.3 + Math.abs(relief(x * 0.038, z * 0.02, seed + 18))) * v.terrainAmplitude * 2.6;
     const curvature = -(x * x + z * z) / (2 * v.horizonRadius);
-    const y = clouds ? curvature + relief(x * 0.013, z * 0.023, seed) * v.cloudHeight
-      : curvature + hills * (0.12 + ramp * 0.88) + ridges * ramp + relief(x * 0.35, z * 0.35, seed + 61) * 0.22;
+    let geology = 0;
+    if (v.landscape === "craters") {
+      for (const crater of craters) {
+        const d = Math.hypot(x - crater.x, z - crater.z) / crater.radius;
+        geology += (Math.exp(-Math.pow((d - 1) / 0.24, 2)) * 0.06 - Math.exp(-d * d * 2.2) * 0.17) * crater.radius;
+      }
+    } else if (v.landscape === "glacial") {
+      geology = Math.pow(Math.abs(Math.sin(x * 0.045 + z * 0.017 + base)), 4) * v.terrainAmplitude * 1.2;
+    } else if (v.landscape === "ridges") {
+      geology = Math.pow(1 - Math.abs(relief(x * .055, z * .018, seed + 7)), 5) * v.terrainAmplitude * .7;
+    } else if (v.landscape === "volcanic") {
+      const channelDistance = Math.min(...[0,1,2].map(channel => Math.abs(x - moltenChannelX(z, channel))));
+      geology = -Math.exp(-channelDistance * channelDistance / 4) * 1.4;
+    }
+    const y = clouds ? curvature + relief(x * 0.008, z * 0.014, seed) * v.cloudHeight
+      : curvature + hills * (v.landscape === "craters" ? 0.15 : 0.12 + ramp * 0.88)
+        + (v.landscape === "craters" ? 0 : ridges * ramp) + geology * Math.min(1, distance / 8)
+        + relief(x * 0.5, z * 0.5, seed + 61) * 0.12;
     positions.set([x, y, z], (zi * count + xi) * 3);
     if (zi < segments && xi < segments) {
       const a = zi * count + xi, b = a + 1, c = a + count, d = c + 1;
@@ -78,4 +102,44 @@ export function createSurface(v: VisualEnvironment, seed: number, clouds = false
       : h(a + count + 1) * (tx + tz - 1) + h(a + 1) * (1 - tz) + h(a + count) * (1 - tx);
   };
   return { geometry, heightAt };
+}
+
+export const moltenChannelX = (z: number, channel: number) =>
+  [-28, 24, 74][channel] + Math.sin(z * .038 + channel * 2) * 11 + Math.sin(z * .13 + channel) * 2;
+
+export interface RockPlacement {
+  x: number; y: number; z: number; sx: number; sy: number; sz: number; rotation: number; shade: number; radius: number;
+}
+/** Render transforms and conservative collision bounds share one deterministic source. */
+export function createRocks(v: VisualEnvironment, seed: number, heightAt: (x: number, z: number) => number): RockPlacement[] {
+  const random = randomSource(seed + 19);
+  return Array.from({length: v.rockCount}, () => {
+    const angle = random() * Math.PI * 2, distance = 10 + random() * 110;
+    const x = Math.cos(angle) * distance, z = 12 + Math.sin(angle) * distance;
+    const scale = (.3 + Math.pow(random(), 2.6) * 2.9) * v.rockScale;
+    const sx = scale * (.65 + random() * .65), sz = scale * (.65 + random() * .5);
+    const sy = scale * (v.landscape === "glacial" ? 1.7 : v.landscape === "craters" ? .36 : .65 + random() * .4);
+    const radius = Math.max(sx, sz) * 1.18;
+    const bottom = Math.min(heightAt(x,z), ...Array.from({length: 8}, (_, i) => heightAt(x + Math.cos(i*Math.PI/4)*radius, z + Math.sin(i*Math.PI/4)*radius)));
+    // Restore the proof-of-concept's exposed rock silhouettes; lower roots stay embedded.
+    return {x,y:bottom+sy*.45,z,sx,sy,sz,radius,rotation:random()*Math.PI*2,shade:.75+random()*.55};
+  });
+}
+
+/** Small substeps prevent tunnelling, circle bounds keep movement inside detailed terrain. */
+export function safeObserverMove(x: number, z: number, dx: number, dz: number, v: VisualEnvironment,
+  heightAt: (x:number,z:number)=>number, rocks: RockPlacement[]) {
+  const steps = Math.max(1, Math.ceil(Math.hypot(dx,dz)/.2));
+  for (let step=0; step<steps; step++) {
+    const nx=x+dx/steps, nz=z+dz/steps;
+    if (Math.hypot(nx,nz-12.25)>v.movementRadius) break;
+    if (v.surfacePreset !== "gas-giant") {
+      if (rocks.some(rock=>Math.hypot(nx-rock.x,nz-rock.z)<rock.radius+.65)) break;
+      const h=heightAt(nx,nz), previous=heightAt(x,z);
+      const slope=Math.max(Math.abs(heightAt(nx+.5,nz)-heightAt(nx-.5,nz)),Math.abs(heightAt(nx,nz+.5)-heightAt(nx,nz-.5)));
+      if (!Number.isFinite(h) || slope>v.maxSlope || Math.abs(h-previous)>.2) break;
+    }
+    x=nx;z=nz;
+  }
+  return {x,z};
 }

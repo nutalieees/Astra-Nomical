@@ -4,3 +4,4 @@ out/
 *.tsbuildinfo
 .DS_Store
 .env*.local
+data/source/sky/hygdata_v41.csv
