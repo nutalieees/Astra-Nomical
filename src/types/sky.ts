@@ -49,3 +49,36 @@ export interface ArduinoSkyCatalogue {
     warnings: string[];
   };
 }
+
+export type CartesianVector = [number, number, number];
+
+/** Offline-enriched catalogue input in equatorial J2000 Cartesian coordinates. */
+export interface CatalogueStar {
+  sourceId: string;
+  positionPc: CartesianVector;
+  absoluteMagnitudeV: number;
+}
+
+/** Full-sphere result before any assumed surface orientation is applied. */
+export interface DerivedSkyStar {
+  sourceId: string;
+  direction: CartesianVector;
+  distanceFromDestinationPc: number;
+  apparentMagnitudeV: number;
+  relativeFluxToV0: number;
+}
+
+export interface CachedSkyManifestEntry {
+  planetName: string;
+  hostName: string;
+  observerPositionPc: CartesianVector;
+  candidateCountBeforeCap: number;
+  starCount: number;
+  limitingMagnitudeV: number;
+  maximumRenderStars: number;
+  excludedHostHygIds: string[];
+  excludedHostCount: number;
+  sunCount: number;
+  binary: { file: string; bytes: number; sha256: string };
+  sidecar: { file: string; bytes: number; sha256: string };
+}

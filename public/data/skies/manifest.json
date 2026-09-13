@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "scripts/build-planet-skies.cjs",
+  "coordinateFrame": "equatorial J2000 Cartesian axes; NASA ICRS J2000 coordinates treated as aligned to HYG J2000",
+  "photometricBand": "V",
+  "magnitudeReference": "relativeFluxToV0 = 10^(-0.4 * apparentMagnitudeV)",
+  "catalogue": {
+    "catalogue": "HYG Database v4.1",
+    "upstreamRepository": "https://github.com/astronexus/HYG-Database",
+    "pinnedCommit": "3bf37f4b2d5460e1278286320d1d62fab9b493c1",
+    "downloadUrl": "https://raw.githubusercontent.com/astronexus/HYG-Database/3bf37f4b2d5460e1278286320d1d62fab9b493c1/hyg/CURRENT/hygdata_v41.csv",
+    "file": "hygdata_v41.csv",
+    "sha256": "d9f69fd86bbf90a4e4d52b4c5c53eacfa6dfc0bfdef85bfd94f095e0bebe4ebd",
+    "coordinateFrame": "equatorial, J2000 epoch and equinox",
+    "positionUnit": "pc",
+    "photometricBand": "V (HYG visual magnitude)",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://github.com/astronexus/HYG-Database/blob/3bf37f4b2d5460e1278286320d1d62fab9b493c1/LICENSE",
+    "attribution": "HYG Database by David Nash / Astronexus",
+    "includedValidRecords": 109401,
+    "skippedRecords": {
+      "missingOrDubiousDistanceOrPhotometry": 10225
+    }
+  },
+  "hostSystems": {
+    "name": "NASA Exoplanet Archive Planetary Systems Composite Parameters",
+    "url": "https://exoplanetarchive.ipac.caltech.edu/TAP/sync",
+    "table": "pscomppars",
+    "query": "select pl_name,hostname,ra,dec,sy_dist,sy_disterr1,sy_disterr2,st_rad,st_teff,pl_orbsmax from pscomppars where pl_name in ('TRAPPIST-1 e','Proxima Cen b','55 Cnc e','WASP-121 b','Kepler-186 f')",
+    "rawResponseSha256": "497c98af36020def5cff5cc90f2ba424e3729dc42cc72b01f1532d7a4508a3eb",
+    "coordinateFrame": "ICRS",
+    "coordinateEpoch": "J2000",
+    "distanceUnit": "pc",
+    "recordCount": 5
+  },
+  "selection": "Apparent V magnitude is recalculated at each destination, filtered at V <= 10, then the brightest 20,000 are retained. The Sun and significant curated companions are always retained.",
+  "orientation": "Full celestial sphere in catalogue axes; no surface up, latitude, local time, or orientation is applied.",
+  "assumptions": [
+    "The planet is approximated at the host-system position; planetary orbital offsets are neglected.",
+    "Interstellar extinction is neglected in both the Earth-derived absolute magnitude and destination apparent magnitude.",
+    "Light-travel-time effects and stellar space motion after the J2000 catalogue epoch are neglected.",
+    "HYG is selected from the Earth viewpoint and is incomplete for stars that would be bright only near a destination.",
+    "B-V color is converted to an approximate blackbody display RGB; missing B-V receives a warm-white display fallback.",
+    "The host star is excluded by curated HYG identity when present and must be rendered separately by the planet scene."
+  ],
+  "skies": [
+    {
+      "planetName": "TRAPPIST-1 e",
+      "hostName": "TRAPPIST-1",
+      "observerPositionPc": [
+        12.046001813684036,
+        -2.8638994567525926,
+        -1.0927287107495178
+      ],
+      "candidateCountBeforeCap": 99353,
+      "starCount": 20000,
+      "limitingMagnitudeV": 10,
+      "maximumRenderStars": 20000,
+      "excludedHostHygIds": [],
+      "excludedHostCount": 0,
+      "significantCompanions": [],
+      "companionNote": null,
+      "sunCount": 1,
+      "binary": {
+        "file": "trappist-1-e.bin",
+        "bytes": 560016,
+        "sha256": "511bb2a9fcd8a23dab94f13d5d5318876407d5891382f2481d089a4fb522cd9f"
+      },
+      "sidecar": {
+        "file": "trappist-1-e.json",
+        "bytes": 982289,
+        "sha256": "9e814555ff091ee51a74f01bd004920e4f056973658a14a1b5d71a104648d16a"
+      }
+    },
+    {
+      "planetName": "Proxima Centauri b",
+      "hostName": "Proxima Cen",
+      "observerPositionPc": [
+        -0.47452204089113964,
+        -0.36271375151586327,
+        -1.1560116709055304
+      ],
+      "candidateCountBeforeCap": 99559,
+      "starCount": 20000,
+      "limitingMagnitudeV": 10,
+      "maximumRenderStars": 20000,
+      "excludedHostHygIds": [
+        "70666"
+      ],
+      "excludedHostCount": 1,
+      "significantCompanions": [
+        {
+          "hygId": "71456",
+          "name": "Alpha Centauri A",
+          "relationship": "wide stellar companion"
+        },
+        {
+          "hygId": "71453",
+          "name": "Alpha Centauri B",
+          "relationship": "wide stellar companion"
+        }
+      ],
+      "companionNote": null,
+      "sunCount": 1,
+      "binary": {
+        "file": "proxima-centauri-b.bin",
+        "bytes": 560016,
+        "sha256": "8f40a6554eeebaedfb51d70a5fcfdabb9970d0f34a7b041a55001624c7e36965"
+      },
+      "sidecar": {
+        "file": "proxima-centauri-b.json",
+        "bytes": 981564,
+        "sha256": "e827023696f0c03173a7c113cbaceb5bba5ca45cc39ed154d38e34a2e5e38598"
+      }
+    },
+    {
+      "planetName": "55 Cancri e",
+      "hostName": "55 Cnc",
+      "observerPositionPc": [
+        -7.576013248701932,
+        8.082650470765472,
+        5.972402772161929
+      ],
+      "candidateCountBeforeCap": 99173,
+      "starCount": 20000,
+      "limitingMagnitudeV": 10,
+      "maximumRenderStars": 20000,
+      "excludedHostHygIds": [
+        "43464"
+      ],
+      "excludedHostCount": 1,
+      "significantCompanions": [],
+      "companionNote": "The known wide companion 55 Cancri B is not a separate identified record in the pinned HYG input and is omitted rather than synthesized.",
+      "sunCount": 1,
+      "binary": {
+        "file": "55-cancri-e.bin",
+        "bytes": 560016,
+        "sha256": "0dc4a6ae9e78026ecac6b8c5fed10a1a0053a4924fc92b93634a95d3cf48a613"
+      },
+      "sidecar": {
+        "file": "55-cancri-e.json",
+        "bytes": 980294,
+        "sha256": "c39581853babc1fd9cdcf41bd81b42dd8bd293561234481d0941ca4830492d31"
+      }
+    },
+    {
+      "planetName": "WASP-121 b",
+      "hostName": "WASP-121",
+      "observerPositionPc": [
+        -63.33565105859115,
+        199.65647425601438,
+        -170.2081607815614
+      ],
+      "candidateCountBeforeCap": 66266,
+      "starCount": 20000,
+      "limitingMagnitudeV": 10,
+      "maximumRenderStars": 20000,
+      "excludedHostHygIds": [],
+      "excludedHostCount": 0,
+      "significantCompanions": [],
+      "companionNote": null,
+      "sunCount": 1,
+      "binary": {
+        "file": "wasp-121-b.bin",
+        "bytes": 560016,
+        "sha256": "519c6b0bc2656fc5ca949323031963448244f760ac85741a8308a07f5f2f96d9"
+      },
+      "sidecar": {
+        "file": "wasp-121-b.json",
+        "bytes": 972358,
+        "sha256": "421d01412c9692791fcf09332ed058001f216e93ef189ff61f688074be1d87b1"
+      }
+    },
+    {
+      "planetName": "Kepler-186 f",
+      "hostName": "Kepler-186",
+      "observerPositionPc": [
+        61.30275533350713,
+        -112.19138541566922,
+        123.26675976528679
+      ],
+      "candidateCountBeforeCap": 78077,
+      "starCount": 20000,
+      "limitingMagnitudeV": 10,
+      "maximumRenderStars": 20000,
+      "excludedHostHygIds": [],
+      "excludedHostCount": 0,
+      "significantCompanions": [],
+      "companionNote": null,
+      "sunCount": 1,
+      "binary": {
+        "file": "kepler-186-f.bin",
+        "bytes": 560016,
+        "sha256": "16457874e8b28bb3113ad61eb264c9d88d232d0e5cce45f81692cae8fd4ef861"
+      },
+      "sidecar": {
+        "file": "kepler-186-f.json",
+        "bytes": 990516,
+        "sha256": "a0bf4b36100c3ac6b2566236e6e54d133654ff19180dac4bcd2b81f7564e7ee9"
+      }
+    }
+  ]
+}

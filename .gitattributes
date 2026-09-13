@@ -1,3 +1,5 @@
 # Keep source snapshots byte-identical so provenance hashes survive checkout.
 data/source/arduino/*.h -text whitespace=cr-at-eol
 src/lib/astronomy/data/arduino-sky.json text eol=lf
+public/data/skies/*.bin binary
+public/data/skies/*.json text eol=lf

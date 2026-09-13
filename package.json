@@ -9,7 +9,11 @@
     "typecheck": "tsc --noEmit",
     "stars:convert": "node scripts/convert-star-data.cjs",
     "stars:check": "node scripts/convert-star-data.cjs --check",
-    "stars:test": "node scripts/convert-star-data.test.cjs"
+    "stars:test": "node scripts/convert-star-data.test.cjs",
+    "skies:download": "node scripts/download-hyg.cjs",
+    "skies:build": "node scripts/build-planet-skies.cjs",
+    "skies:check": "node scripts/build-planet-skies.cjs --check",
+    "skies:test": "node scripts/planet-sky.test.cjs"
   },
   "dependencies": {
     "@react-three/fiber": "^9.7.0",
