@@ -54,7 +54,7 @@ function RockySurface({ v, seed, surface }: { v: VisualEnvironment; seed: number
         float vein = abs(sin(terrainPoint.x*0.17 + sin(terrainPoint.z*0.055)*2.8 + fbm(terrainPoint.xz*0.09)*3.0));
         float fissure = (1.0-smoothstep(0.025,0.10,vein))*step(0.01,heat);
         diffuseColor.rgb *= mix(0.5,1.45,grit);
-        diffuseColor.rgb = mix(diffuseColor.rgb,vec3(0.55,0.56,0.53),frost*smoothstep(0.65,0.82,grit));
+        diffuseColor.rgb = mix(diffuseColor.rgb,accent,frost*smoothstep(0.30,0.65,grit));
         diffuseColor.rgb = mix(diffuseColor.rgb,accent,fissure*0.7);`);
       shader.fragmentShader = shader.fragmentShader.replace("#include <emissivemap_fragment>",
         "#include <emissivemap_fragment>\n totalEmissiveRadiance = accent * heat * fissure;");
@@ -85,7 +85,7 @@ function Rocks({ v, seed, heightAt }: { v: VisualEnvironment; seed: number; heig
       const scale = (0.25 + Math.pow(random(), 3) * 3.3) * v.rockScale;
       const y = Math.min(heightAt(x,z), heightAt(x-scale,z), heightAt(x+scale,z), heightAt(x,z-scale), heightAt(x,z+scale));
       matrix.position.set(x, y + scale * 0.35, z);
-      matrix.scale.set(scale * (0.8 + random()), scale * 0.8, scale);
+      matrix.scale.set(scale * (0.8 + random()), scale * (v.landscape === "glacial" ? 1.8 : v.landscape === "craters" ? 0.4 : 0.8), scale);
       matrix.rotation.set(0, random()*Math.PI*2, 0); matrix.updateMatrix();
       instances.current!.setMatrixAt(index, matrix.matrix);
       instances.current!.setColorAt(index, color.clone().multiplyScalar(0.7 + random()*0.65));

@@ -41,18 +41,38 @@ export function createSurface(v: VisualEnvironment, seed: number, clouds = false
     return Math.sign(t) * t * t * (clouds ? 5000 : 850);
   });
   const positions = new Float32Array(count * count * 3);
+  const random = randomSource(seed + 401);
+  const craters = Array.from({ length: 18 }, () => {
+    const angle = random() * Math.PI * 2, distance = 28 + random() * 260;
+    return { x: Math.cos(angle) * distance, z: 12 + Math.sin(angle) * distance, radius: 12 + random() * 30 };
+  });
   const indices: number[] = [];
   for (let zi = 0; zi < count; zi++) for (let xi = 0; xi < count; xi++) {
     const x = coordinates[xi], z = coordinates[zi];
     const distance = Math.hypot(x, z - 12);
     const ramp = Math.min(1, distance / 28);
     const f = v.terrainFrequency;
-    const hills = relief(x * f, z * f, seed) * v.terrainAmplitude;
+    const base = relief(x * f, z * f, seed);
+    const hills = (v.landscape === "glacial" ? Math.abs(base) * 1.8 : base) * v.terrainAmplitude;
     const ridges = Math.exp(-Math.pow((distance - 85) / 33, 2)) *
       (0.3 + Math.abs(relief(x * 0.038, z * 0.02, seed + 18))) * v.terrainAmplitude * 2.6;
     const curvature = -(x * x + z * z) / (2 * v.horizonRadius);
+    let geology = 0;
+    if (v.landscape === "craters") {
+      for (const crater of craters) {
+        const d = Math.hypot(x - crater.x, z - crater.z) / crater.radius;
+        geology += (Math.exp(-Math.pow((d - 1) / 0.16, 2)) * 0.16
+          - Math.exp(-d * d * 2.8) * 0.22) * crater.radius;
+      }
+    } else if (v.landscape === "glacial") {
+      geology = Math.pow(Math.abs(Math.sin(x * 0.035 + z * 0.018 + base)), 3) * v.terrainAmplitude * 1.5;
+    } else if (v.landscape === "ridges") {
+      geology = Math.pow(1 - Math.abs(base), 5) * v.terrainAmplitude * 0.8;
+    }
     const y = clouds ? curvature + relief(x * 0.013, z * 0.023, seed) * v.cloudHeight
-      : curvature + hills * (0.12 + ramp * 0.88) + ridges * ramp + relief(x * 0.35, z * 0.35, seed + 61) * 0.22;
+      : curvature + hills * (v.landscape === "craters" ? 0.22 : 0.12 + ramp * 0.88)
+        + (v.landscape === "craters" ? 0 : ridges * ramp) + geology * ramp
+        + relief(x * 0.35, z * 0.35, seed + 61) * 0.22;
     positions.set([x, y, z], (zi * count + xi) * 3);
     if (zi < segments && xi < segments) {
       const a = zi * count + xi, b = a + 1, c = a + count, d = c + 1;

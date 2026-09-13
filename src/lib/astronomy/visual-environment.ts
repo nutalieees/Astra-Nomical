@@ -26,28 +26,40 @@ export function deriveVisualEnvironment(planet: Planet, environment: PlanetEnvir
   const angularRadius = Math.atan(bounded(environment.apparentStarSize, 0.001, 1e5, 1) * 0.00465047);
   const gravity = bounded(environment.gravityEarth, 0.05, 30, 1);
   const horizonRadius = radius * 6371000 / 3500;
+  // These are curated illustration choices, not inferred geological discoveries.
+  const proxima = planet.name === "Proxima Centauri b";
+  const kepler = planet.name === "Kepler-186 f";
+  const landscape = giant ? "clouds" : hot ? "volcanic" : proxima ? "craters" : kepler ? "glacial" : "ridges";
+  assumptions.push(proxima
+    ? "Proxima b is illustrated as a dry, cratered rocky world with minimal haze. Neither craters nor atmospheric loss are established observations; its radius is an estimate."
+    : kepler
+      ? "Kepler-186 f is illustrated with fractured, frost-covered ridges under a hypothetical scattering atmosphere. Ice, water and this atmosphere have not been detected; its low equilibrium temperature only motivates the scenario."
+      : giant ? "Cloud bands and their colours are an illustrative atmospheric structure, not a resolved image."
+        : hot ? "Dark crust and molten channels illustrate extreme irradiation; the actual surface distribution and local temperature are unknown."
+          : "TRAPPIST-like cold rock uses jagged charcoal ridges and limited frost as an illustrative geological scenario; no terrain map is known.");
   return {
+    landscape,
     surfacePreset: preset,
-    skyColor: giant ? "#192c3a" : hot ? "#080909" : "#151d23",
-    horizonColor: giant ? "#ad9783" : hot ? "#443026" : "#77766e",
-    groundColor: hot ? "#262522" : "#55514b",
-    groundAccentColor: hot ? "#ff6b16" : "#9b9383",
+    skyColor: giant ? "#192c3a" : hot ? "#080909" : proxima ? "#030406" : kepler ? "#101f30" : "#101014",
+    horizonColor: giant ? "#ad9783" : hot ? "#443026" : proxima ? "#181414" : kepler ? "#8199aa" : "#68534c",
+    groundColor: hot ? "#262522" : proxima ? "#796052" : kepler ? "#8c9da4" : "#403e43",
+    groundAccentColor: hot ? "#ff6b16" : proxima ? "#ad9074" : kepler ? "#d5e3e5" : "#81746a",
     starColor: /^#[0-9a-f]{6}$/i.test(environment.starColor) ? environment.starColor : "#fff4e8",
     starSize: bounded(angularRadius * 1.8, 0.0105, 0.21, 0.03),
     starPosition: [100, 145, -680],
     starIntensity: bounded(2 + brightness * 0.9, 2, 5.4, 2),
-    ambientIntensity: 1.1,
-    fillColor: "#b6c4cc",
+    ambientIntensity: proxima ? 0.24 : kepler ? 0.65 : 0.48,
+    fillColor: kepler ? "#c6d9ed" : proxima ? "#aaa0a0" : "#b6b2ba",
     exposure: bounded(1.05 - brightness * 0.06, 0.78, 1.05, 1),
-    atmosphereOpacity: atmosphere, hazeDensity: atmosphere * 0.012,
+    atmosphereOpacity: proxima ? 0 : kepler ? 0.32 : atmosphere, hazeDensity: proxima ? 0 : atmosphere * 0.012,
     fogNear: giant ? 80 : 120,
-    fogFar: giant ? 600 : atmosphere > 0 ? 580 : 1100,
-    terrainAmplitude: bounded(7 / Math.sqrt(gravity), 3.5, 10, 7),
-    terrainFrequency: hot ? 0.032 : 0.022,
+    fogFar: giant ? 600 : proxima ? 1400 : kepler ? 440 : atmosphere > 0 ? 580 : 1100,
+    terrainAmplitude: bounded((proxima ? 4 : kepler ? 10 : 8) / Math.sqrt(gravity), 3.5, 13, 7),
+    terrainFrequency: hot ? 0.032 : proxima ? 0.014 : kepler ? 0.018 : 0.028,
     horizonRadius, horizonCurvature: 1 / horizonRadius,
     roughness: hot ? 0.93 : 0.98,
-    rockCount: giant ? 0 : 220, rockScale: hot ? 1.15 : 1,
-    frostCoverage: cold ? 0.08 : 0,
+    rockCount: giant ? 0 : proxima ? 90 : kepler ? 130 : 260, rockScale: hot ? 1.15 : kepler ? 1.7 : proxima ? 0.6 : 1.2,
+    frostCoverage: kepler ? 0.85 : proxima ? 0 : cold ? 0.08 : 0,
     emissiveIntensity: hot && !giant ? 4.2 : 0,
     cloudOpacity: giant ? 0.82 : 0,
     cloudColor: "#3e464e", cloudAccentColor: "#ddc6ad",
