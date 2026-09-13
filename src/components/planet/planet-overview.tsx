@@ -5,6 +5,7 @@ interface PlanetOverviewProps {
   planet: Planet;
   environment: PlanetEnvironment;
   onEnterWorld: () => void;
+  onBackToMap?: () => void;
   variant?: "field";
 }
 
@@ -12,7 +13,7 @@ function value(value: number | undefined, suffix: string) {
   return value == null ? "Unknown" : `${value.toLocaleString()} ${suffix}`;
 }
 
-export function PlanetOverview({ planet, environment, onEnterWorld, variant }: PlanetOverviewProps) {
+export function PlanetOverview({ planet, environment, onEnterWorld, onBackToMap, variant }: PlanetOverviewProps) {
   return (
     <section className={variant === "field" ? "planet-overview field-overview" : "planet-overview"} aria-labelledby="planet-name">
       <p className="eyebrow">CONFIRMED EXOPLANET · {planet.discoveryYear ?? "YEAR UNKNOWN"}</p>
@@ -29,6 +30,7 @@ export function PlanetOverview({ planet, environment, onEnterWorld, variant }: P
       <button className="primary-button" type="button" onClick={onEnterWorld}>
         <span>ENTER WORLD</span><span aria-hidden="true">↗</span>
       </button>
+      {onBackToMap && <div><button className="text-button" type="button" onClick={onBackToMap}>BACK TO MAP</button></div>}
     </section>
   );
 }
