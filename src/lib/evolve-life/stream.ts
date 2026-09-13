@@ -6,14 +6,16 @@ const pressure = z.object({
   factor: text, knownValue: text.optional(), pressure: text,
   severity: z.enum(["low", "moderate", "high", "extreme"]), evidence: text,
 }).strict();
-const result = z.object({
-  pressures: z.array(pressure).min(3).max(6),
-  organism: z.object({
+export const validatedOrganismSchema = z.object({
     name: text, summary: text,
     morphology: z.object({ size: text, bodyPlan: text, locomotion: text, surfaceCovering: text, sensorySystems: text }).strict(),
     adaptations: z.array(z.object({ environmentalPressure: text, consequence: text, adaptation: text, reasoning: text }).strict()).min(1).max(8),
     survivalStrategy: text, uncertainty: z.array(text).min(1),
-  }).strict(),
+  }).strict();
+const result = z.object({
+  pressures: z.array(pressure).min(3).max(6),
+  organism: validatedOrganismSchema,
+  illustrationToken: z.string().min(1).max(100_000).optional(),
 }).strict().refine((value) => value.organism.adaptations.every((adaptation) =>
   value.pressures.some((item) => item.factor === adaptation.environmentalPressure)), "Unknown adaptation pressure.");
 

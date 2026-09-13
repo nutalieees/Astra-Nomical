@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { evolveLife } from "../../../lib/ai/evolveLife";
+import { issueOrganismImageToken } from "../../../lib/ai/organism-image-ticket";
 import { deriveEnvironment } from "../../../lib/astronomy/environment";
 import { FEATURED_PLANETS } from "../../../lib/astronomy/planets-featured";
 import { evolveLifeEventSchema, type EvolveLifeEvent } from "../../../lib/evolve-life/stream";
@@ -54,7 +55,12 @@ export async function POST(request: Request) {
           onProgress: (progress) => send({ type: "progress", ...progress }),
         });
         if ("error" in result) send({ type: "error", error: result.error });
-        else send({ type: "result", result: { pressures: result.pressures, organism: result.organism } });
+        else {
+          let illustrationToken: string | undefined;
+          try { illustrationToken = issueOrganismImageToken(planet, environment, result.organism); }
+          catch { /* An optional illustration must never prevent the textual result. */ }
+          send({ type: "result", result: { pressures: result.pressures, organism: result.organism, ...(illustrationToken ? { illustrationToken } : {}) } });
+        }
       } catch {
         send({ type: "error", error: { code: "AGENT_FAILED", message: "The life simulation could not complete. Please retry.", retryable: true, diagnosticId: "stream-error" } });
       } finally {

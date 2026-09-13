@@ -67,15 +67,15 @@ function fixtureReply(request: ModelRequest, reject = false) {
   const input = context(request);
   const extreme = input.environment.temperatureCategory === "extreme";
   const instructions = request.systemInstructions ?? "";
-  if (instructions.includes("You are the Planet Scientist")) {
+  if (instructions.startsWith("You are the Planet Scientist")) {
     const pressures = extreme ? cancriPressures : trappistPressures;
     return response({ pressures: pressures.map((pressure) => ({ ...pressure, knownValue: pressure.knownValue ?? null })) });
   }
-  if (instructions.includes("revision pass")) {
+  if (instructions.startsWith("You are the Evolution Agent") && instructions.includes("This is a revision pass of the Evolution Agent.")) {
     return response({ ...(extreme ? cancriCandidate : trappistCandidate), uncertainty: ["Solvent and energy supply remain unverified."] });
   }
-  if (instructions.includes("You are the Evolution Agent")) return response(extreme ? cancriCandidate : trappistCandidate);
-  if (instructions.includes("You are the Scientific Critic")) return response(review(input.candidate, reject));
+  if (instructions.startsWith("You are the Evolution Agent")) return response(extreme ? cancriCandidate : trappistCandidate);
+  if (instructions.startsWith("You are the Scientific Critic")) return response(review(input.candidate, reject));
   throw new Error("Unexpected agent role.");
 }
 

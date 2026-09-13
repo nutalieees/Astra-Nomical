@@ -242,3 +242,74 @@ button:focus-visible { outline: 2px solid #b7d9ff; outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) {
   .life-panel *, .life-panel *::after { animation: none !important; transition: none !important; }
 }
+
+/* An optional field plate develops beside the completed scientific analysis. */
+.life-illustration-option { display: flex; align-items: flex-start; gap: 10px; margin: 16px 0 3px; cursor: pointer; color: #cadbe4; font-size: .67rem; line-height: 1.4; }
+.life-illustration-option input { accent-color: #a0d8d4; margin: 2px 0 0; width: 14px; height: 14px; flex: 0 0 auto; }
+.life-illustration-option input:focus-visible { outline: 2px solid #b7d9ff; outline-offset: 3px; }
+.life-illustration-option small { display: block; color: #90a6ba; font-size: .57rem; margin-top: 3px; }
+.organism-illustration { margin: 0 0 20px; border-top: 1px solid #b9d9f127; border-bottom: 1px solid #b9d9f127; padding: 11px 0; }
+.organism-illustration-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #a6cfcf; font-size: .5rem; letter-spacing: .11em; }
+.organism-illustration-heading small { color: #889db2; font-size: .5rem; letter-spacing: .02em; }
+.organism-image-loading { display: flex; align-items: center; gap: 16px; min-height: 96px; padding: 13px 3px 5px; }
+.organism-image-loading strong, .organism-image-error strong { display: block; color: #c5d9df; font-size: .72rem; font-weight: 500; }
+.organism-image-loading p, .organism-image-error p, .organism-image-optional p, .organism-image-unavailable { color: #91aabd; font-size: .64rem; line-height: 1.6; margin: 6px 0 0; }
+.organism-image-reticle { display: block; position: relative; height: 58px; width: 58px; flex: 0 0 58px; border: 1px solid #a3d8db32; border-radius: 50%; background: radial-gradient(ellipse, #9ddac41c, transparent 68%); }
+.organism-image-reticle::before, .organism-image-reticle::after { content: ""; position: absolute; background: #a4d6d334; }
+.organism-image-reticle::before { top: 27px; left: -5px; width: 66px; height: 1px; }
+.organism-image-reticle::after { left: 27px; top: -5px; height: 66px; width: 1px; }
+.organism-image-reticle i { position: absolute; inset: 11px; border: 1px solid #a0dbcf70; border-radius: 43% 57% 63% 37%; animation: field-plate-develop 5s ease-in-out infinite; }
+.organism-image-reticle i:nth-child(2) { inset: 18px; transform: rotate(75deg); animation-delay: -1.6s; }
+.organism-image-reticle i:nth-child(3) { inset: 22px; border-color: #c0e9dca6; border-radius: 50%; animation-delay: -3.3s; }
+.organism-image-figure { margin: 11px 0 0; animation: life-reveal .5s ease both; }
+.organism-image-figure img { display: block; width: 100%; height: auto; max-height: 180px; object-fit: contain; background: #070d15; border-radius: 2px; }
+.organism-image-figure figcaption { color: #8ea5b9; font-size: .56rem; line-height: 1.5; margin-top: 8px; }
+.organism-image-error { padding: 13px 0 0; }
+.organism-image-error strong { color: #dbcaab; }
+.organism-image-error > small { display: block; color: #8396ab; font-size: .51rem; overflow-wrap: anywhere; margin-top: 4px; }
+.organism-image-optional { padding-top: 3px; }
+.organism-illustration .text-button { display: flex; align-items: center; gap: 20px; font-size: .55rem; padding: 12px 0 2px; }
+.organism-image-unavailable { margin-top: 10px; }
+@keyframes field-plate-develop { 50% { transform: rotate(145deg) scale(.82); opacity: .4; } }
+@media (max-width: 700px) { .organism-image-figure img { max-height: 150px; } }
+
+/* The validated specimen develops in the world; the panel remains its field notes. */
+.organism-world-status { margin: 0 0 20px; padding: 12px 0; border-top: 1px solid #b9d9f127; border-bottom: 1px solid #b9d9f127; }
+.organism-world-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #a6cfcf; font-size: .5rem; letter-spacing: .11em; }
+.organism-world-heading small { color: #889db2; font-size: .5rem; letter-spacing: .02em; }
+.organism-model-loading { display: flex; align-items: center; gap: 15px; min-height: 91px; padding: 13px 3px 4px; }
+.organism-model-loading strong, .organism-model-error strong { display: block; color: #c5d9df; font-size: .72rem; font-weight: 500; }
+.organism-model-loading p, .organism-model-error p, .organism-model-optional p, p.organism-model-optional, .organism-model-ready p { color: #91aabd; font-size: .64rem; line-height: 1.6; margin: 7px 0 0; }
+.organism-model-scaffold { position: relative; display: block; height: 54px; width: 54px; flex: 0 0 54px; perspective: 100px; border-radius: 50%; background: radial-gradient(ellipse, #9ddac41d, transparent 68%); }
+.organism-model-scaffold i { position: absolute; inset: 10px 4px; border: 1px solid #a0dbcf8c; border-radius: 50%; transform: rotateX(55deg) rotateZ(-30deg); animation: organism-scaffold 3s ease-in-out infinite; }
+.organism-model-scaffold i:nth-child(2) { inset: 6px 12px; transform: rotateY(50deg) rotateZ(25deg); animation-delay: -.8s; }
+.organism-model-scaffold i:nth-child(3) { inset: 15px; border-color: #d0f3de; transform: rotateZ(-20deg); animation-delay: -1.6s; }
+.organism-model-ready { padding-top: 6px; }
+.organism-world-controls { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+.organism-world-controls .text-button, .organism-world-status .text-button { display: flex; align-items: center; gap: 12px; font-size: .55rem; padding: 12px 0 3px; cursor: pointer; }
+.organism-world-controls .text-button:first-child { color: #b8e5d8; }
+.organism-world-controls .text-button:last-child { color: #9caebe; }
+.organism-world-controls.is-compact { border-top: 1px solid #b9d9f11f; margin-top: 13px; }
+.organism-world-controls.is-compact .text-button { padding-top: 10px; }
+.organism-model-ready p.organism-scale-note { color: #839aad; font-size: .58rem; }
+.organism-model-error { padding: 14px 0 0; }
+.organism-model-error strong { color: #dbcaab; }
+.organism-model-error > small { display: block; color: #8396ab; font-size: .51rem; overflow-wrap: anywhere; margin-top: 5px; }
+.organism-model-optional { padding-top: 4px; }
+.organism-compact-status { margin: 12px 0 0; color: #93adbd; font-size: .6rem; line-height: 1.5; }
+@keyframes organism-scaffold { 50% { opacity: .45; translate: 0 -3px; } }
+
+/* The specimen lives in the world; annotation stays clear of the scientific panels. */
+.world-organism-caption { position: absolute; z-index: 4; bottom: 32px; left: 50%; transform: translateX(-50%); width: min(380px, 32vw); text-align: center; pointer-events: none; color: #dce8e1; text-shadow: 0 2px 12px #000; }
+.world-organism-caption::before { content: ""; display: block; width: 32px; height: 1px; background: #bddac76b; margin: 0 auto 16px; }
+.world-organism-caption .eyebrow { color: #adcfbc; font-size: .49rem; letter-spacing: .2em; }
+.world-organism-caption strong { display: block; font: 400 1.3rem/1.2 Georgia,serif; margin: 9px 0; }
+.world-organism-caption p { margin: 0 0 5px; color: #c6d5cf; font-size: .61rem; }
+.world-organism-caption small { display: block; font-size: .52rem; line-height: 1.5; color: #b5c2be; }
+@media (max-width: 1000px) and (min-width: 701px) { .world-organism-caption { bottom: 210px; width: 45vw; } }
+@media (max-width: 700px) {
+  .world-organism-caption { bottom: 168px; width: calc(100vw - 38px); max-width: 380px; }
+  .world-organism-caption strong { font-size: 1.13rem; }
+  .world-organism-caption::before { margin-bottom: 10px; }
+  .world-page:has(.life-panel:not(.is-collapsed)) .world-organism-caption { opacity: 0; }
+}

@@ -8,18 +8,30 @@ import type { Planet } from "../../types/planet";
 import type { VisualEnvironment } from "../../types/visual-environment";
 import { createSurface, randomSource, seedFromName } from "./surface-geometry";
 import { ObserverCamera } from "./observer-camera";
+import type { ValidatedOrganism } from "../../types/astrobiology";
+import type { OrganismSceneSpec } from "../../lib/evolve-life/organism-scene";
+import { getOrganismPlacement, organismDimensions } from "./organism-geometry";
+import { OrganismModel } from "./organism-model";
 
 export interface PlanetSceneProps {
   planet: Planet;
   environment: PlanetEnvironment;
   visualEnvironment: VisualEnvironment;
   resetView?: number;
+  organism?: ValidatedOrganism | null;
+  organismScene?: OrganismSceneSpec | null;
+  organismVisible?: boolean;
+  focusOrganism?: number;
 }
 
 /** The existing Canvas scene: all appearance comes from the visual mapper. */
-export function PlanetScene({ planet, visualEnvironment: v, resetView = 0 }: PlanetSceneProps) {
+export function PlanetScene({ planet, visualEnvironment: v, resetView = 0, organism, organismScene, organismVisible = true, focusOrganism = 0 }: PlanetSceneProps) {
   const seed = useMemo(() => seedFromName(planet.name), [planet.name]);
   const surface = useMemo(() => createSurface(v, seed, v.surfacePreset === "gas-giant"), [v, seed]);
+  const placement = useMemo(() => getOrganismPlacement(v, surface.heightAt), [v, surface]);
+  const organismTarget = useMemo<[number,number,number] | null>(() => organism && organismScene && organismVisible
+    ? [placement.position[0], placement.position[1] + organismDimensions(organismScene).y * placement.displayScale * .62, placement.position[2]]
+    : null, [organism, organismScene, organismVisible, placement]);
   useEffect(() => () => surface.geometry.dispose(), [surface]);
   return <>
     <color attach="background" args={[v.skyColor]} />
@@ -35,7 +47,10 @@ export function PlanetScene({ planet, visualEnvironment: v, resetView = 0 }: Pla
     {v.surfacePreset === "gas-giant"
       ? <CloudDeck v={v} seed={seed} />
       : <RockySurface v={v} seed={seed} surface={surface} />}
-    <ObserverCamera v={v} heightAt={surface.heightAt} resetView={resetView} />
+    {organism && organismScene && organismVisible && <OrganismModel key={organism.name} spec={organismScene} v={v}
+      seed={seedFromName(organism.name)} position={placement.position} displayScale={placement.displayScale} />}
+    <ObserverCamera v={v} heightAt={surface.heightAt} resetView={resetView}
+      organismTarget={organismTarget} focusOrganism={focusOrganism} />
   </>;
 }
 

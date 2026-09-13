@@ -15,18 +15,32 @@ environment overrides are rejected.
 
 The response is an `application/x-ndjson` stream of validated public events:
 `progress` (`stage`, `status`), `heartbeat`, and a terminal `result` or `error`.
-The browser receives only final `pressures` and `organism` in a success event.
+The browser receives final `pressures` and `organism` in a success event, plus an
+optional signed `illustrationToken` containing only that validated organism and
+its selected Planet/PlanetEnvironment snapshot.
 Candidate drafts, the internal review ledger, prompts, SDK events, and private
 model reasoning never enter this transport. Public causal explanations are the
 structured adaptation fields returned by the agents.
 
-The Evolve Life panel shows real stage starts/completions, followed by an
-850 ms validation transition (immediate with reduced motion). Its timeline can
+The Evolve Life panel shows real stage starts/completions and reveals the textual
+result immediately when it arrives. Its timeline can
 be minimized without stopping the workflow. Results expose pressure-linked
 adaptations, morphology, survival strategy, and explicit uncertainty through
 disclosures. Failed or disconnected runs offer Retry; Cancel, leaving the world,
 and changing planets abort the active request and discard stale results. The
 world and HUD stay usable throughout. The browser has a 195-second safety timeout.
+
+Two optional visualizations start independently after the textual result appears.
+The default-checked “Place organism in the world” option requests a procedural
+specimen through `POST /api/organism-scene`; “Include a field illustration” requests
+a 2D concept image through `POST /api/organism-image` and displays it in the panel.
+Each has its own loading state and Retry action. A failure never restarts or fails
+the analysis or the other visualization. Both requests survive panel minimization.
+The 3D specimen focuses the camera when ready while the panel stays open for the
+illustration and field notes; “View organism” minimizes it for inspection. Users
+can orbit, zoom, hide the specimen or return to exploring the world. See
+[organisms in the 3D world](organism-3d.md) and
+[field illustrations](organism-illustrations.md).
 
 All stages use the SDK's structured `outputType` and validated `finalOutput`.
 There is no extraction of JSON from free-form prose. The implementation follows

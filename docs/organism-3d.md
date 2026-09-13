@@ -1,0 +1,35 @@
+# Organisms in the 3D world
+
+The optional organism view is a procedural Three.js specimen placed directly in the planet scene. The default-checked “Place organism in the world” option enables it; if disabled, the completed analysis offers “Place organism in world” later. A separate default-checked “Include a field illustration” option displays a [2D concept image](organism-illustrations.md) in the panel. Both visualizations load and retry independently after the text appears. The 3D view does not convert that image into a mesh: final structured anatomy drives locally constructed geometry and materials.
+
+This is a speculative anatomical interpretation, not a recovered model of real alien life. The final written analysis remains authoritative. The caption identifies microscopic organisms as magnified specimens and other sizes as concept display scale, while the panel preserves the proposed biological size. All geometry uses inspection units rather than biological metres. Terrain placement does not imply life could survive at that location. Gas-giant views show a specimen projection without claiming a solid surface.
+
+## Appearance and inspection
+
+The renderer builds a continuous closed tissue surface for a sheet, cushion, segmented body, radial form or single cell. Its contours have restrained asymmetry and fine folds. Physically lit materials add procedural micropores, mottling and illustrative cellular boundaries for multicellular/colonial forms. Soft, leathery, mucous, plated and mineral surface categories adjust material appearance; explicit plates, appendages or sensory structures appear only when the approved anatomy supports them. These are bounded scientific concept forms, not arbitrary generated 3D assets or precise reconstructions of cell anatomy.
+
+The specimen shares the world's host-star directional light, environmental fill and terrain. Subtle material edge fill approximates tissue softness; it is not a full subsurface-scattering simulation or evidence of biological glow. Surface coloration, pore patterns, exact contours and unresolved proportions are illustration conventions rather than measurements or claims about unmeasured chemistry.
+
+When the specimen arrives, the camera moves into an inspection view while the panel stays open for the illustration and analysis. Drag the world to orbit it and scroll to zoom. “View organism” returns to that view and minimizes the analysis panel; “Hide”/“Show” toggles the specimen, and “Explore world” restores the normal environment camera. Both visualization hooks remain in the parent panel, so minimizing preserves pending requests and completed results.
+
+Dormant specimens have no biological animation. A conditional-active specification permits a restrained tissue pulse and, when its motion allows movement, a small pose sway; this is not a detailed gait or breathing simulation and does not establish viability. Reduced-motion settings disable those motions. No creature traverses or simulates an ecosystem on the terrain.
+
+## Independent structured interpretation
+
+The four-stage Evolve Life workflow still completes and displays its text immediately. A separate `POST /api/organism-scene` request then submits the existing signed `illustrationToken`. The server verifies its signature and expiry, and snapshots exactly the final `ValidatedOrganism`, selected `Planet`, and `PlanetEnvironment`. No candidate, critique, prior agent history, client prompt, or external planetary facts enter this step. The token contains no API credential and cannot authorize replacing the final organism or conditions.
+
+An independent OpenAI Agents SDK `Agent` uses `outputType: organismSceneSchema` through a Responses-backed `Runner` with tracing and storage disabled. Its structured result chooses bounded geometry/material options rather than executable code, arbitrary meshes or model prose to parse. The default model is `gpt-6-astra`; the server-only `OPENAI_ORGANISM_SCENE_MODEL` setting can override it. `OPENAI_API_KEY` remains server-side.
+
+Seven grounding entries quote the approved organism verbatim for organization, form, relative proportions, surface, appendages, senses and motion. Server validation checks unique coverage, exact source quotations, supported organizational complexity, appendages and protective/sensory anatomy, and conservative motion/activity combinations. It rejects unsupported embellishment. Unknown exact ratios, texture and cell/segment drawing counts remain illustrative. Molecular senses do not acquire antennae; a single cell cannot become a multicellular animal; a dormant specimen cannot crawl or breathe. Dormancy does not establish heat resistance or habitability.
+
+Evolution targets a simple, low-energy multicellular hypothesis with connected tissue and modest division of cellular labor, each justified by supplied pressures. Unknown solvent, energy or habitat alone does not force a single-cell design: the multicellular hypothesis also remains conditional on those unverified prerequisites. A colonial or unicellular fallback must explain a contradictory constraint or the absence of a defensible pressure-linked rationale. Existing pressure references and Scientific Critic review remain mandatory. The interpreter cannot override a final single-cell or dormant outcome merely to create a more dramatic object.
+
+The enhancement has a 60-second server deadline, a 75-second client bound and propagated cancellation. Its scaffold loading state appears alongside the completed textual analysis. Failures return a controlled, sanitized error with a diagnostic ID and leave the analysis and 2D illustration intact; “Retry 3D model” runs only this secondary step. Starting a new hypothesis or leaving the world cancels pending work and discards stale geometry. Server logs report stage timing and bounded drawing categories without prompts, credentials or private reasoning.
+
+## Verification
+
+Run `npm run test:scenes` for backend, client and geometry checks. Tests cover source isolation, exact grounding, supported anatomy, token-only transport, independent errors/deadlines, finite geometry and terrain placement. They mock the model and do not establish the scientific correctness of a live result. `npm run typecheck` and `npm run build` check integration.
+
+For a live browser check, enter a featured world and evolve life with placement enabled. Confirm the analysis appears before the model; inspect the final organism's body plan against the visible geometry and quoted grounding. Orbit, zoom, hide/show and return to exploration. A disabled placement option should leave a manual placement action. A failed 3D request must leave the full analysis readable with a separate retry. On extreme worlds, verify that the resulting hypothetical form and caption retain survival limits rather than implying a viable inhabitant.
+
+The implementation follows the existing project SDK pattern and OpenAI's [structured output guidance](https://developers.openai.com/api/docs/guides/structured-outputs).

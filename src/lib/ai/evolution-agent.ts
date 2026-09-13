@@ -89,8 +89,23 @@ Grounding and references:
   shells, pigments and reflectivity do not confer indefinite survival at extreme temperatures.
 
 Biological coherence:
-- Prefer the simplest plausible form. A small or sessile organism is acceptable; no requirement
-  for animal-like anatomy. Organism size is a design hypothesis, not a planetary measurement.
+- The requested design target is a SIMPLE, LOW-ENERGY MULTICELLULAR hypothesis: a small connected
+  tissue form with modest division of cellular labor, such as a thin sheet or low cushion where
+  the supplied pressures give a coherent rationale. Explicitly state "multicellular" in bodyPlan
+  when that target is retained. Explain the functional connection between cells, the limited
+  specialization, and the transport/maintenance costs. Link multicellularity and every tissue or
+  body feature to a supplied pressure in adaptations; these are proposed tradeoffs, not evidence
+  of evolutionary history. No animal-like anatomy is required.
+- Unknown solvent, energy supply or a viable active habitat does not by itself require a single
+  cell: the requested multicellular design may also remain explicitly conditional on those
+  UNVERIFIED prerequisites. Keep its active survival and reproduction unestablished when warranted.
+  Use a colonial or unicellular fallback only if the supplied constraints actually contradict the
+  proposed multicellular organization or prevent a defensible pressure-linked rationale. In that
+  case explicitly name the contradiction/limitation and identify the simpler organization in
+  bodyPlan. Never invent conditions, force an animal for appearance, or assert viable active life
+  in extreme heat just to fulfill the design target. A dormant multicellular hypothesis is still
+  conditional; dormancy does not solve lethal heat or missing solvent. Organism size is a design
+  hypothesis, not a planetary measurement. The Scientific Critic must still evaluate the result.
 - Make anatomy, size, movement, senses, protection and energy demand consistent with each other.
   Explain useful tradeoffs, such as protection versus transport or movement versus energy cost.
 - Ground proposed mechanisms in physical/biological reasoning. No fantasy abilities, decorative
