@@ -6,6 +6,49 @@
   --panel: rgba(9, 14, 28, 0.58);
 }
 
+/* Spatial entrance: the scene occupies the first screen; labels track 3D nodes. */
+.landing-page .site-header { position: absolute; top: 0; width: 100%; pointer-events: none; }
+.exoplanet-field { background: #030610; min-height: 100svh; position: relative; }
+.field-heading { left: 4vw; pointer-events: none; position: absolute; top: 78px; z-index: 2; }
+.field-heading h1 { font-size: clamp(1.35rem, 2.3vw, 2.2rem); font-weight: 400; letter-spacing: -.045em; margin: 6px 0; }
+.field-heading > p:last-child { color: #8294ad; font-size: .68rem; }
+.field-viewport { height: max(540px, 76svh); position: relative; }
+.field-viewport canvas { touch-action: none; }
+.field-labels { inset: 0; pointer-events: none; position: absolute; }
+.field-label { background: rgba(3, 6, 16, .48); border: 0; border-left: 1px solid; border-radius: 0; cursor: pointer; display: grid; gap: 5px; min-height: 58px; padding: 7px 10px; pointer-events: auto; position: absolute; text-align: left; transform: translateX(-50%); transition: background 180ms, box-shadow 180ms; white-space: nowrap; }
+.field-label strong { color: #d4e2f4; font-size: .78rem; font-weight: 500; letter-spacing: .01em; }
+.field-label span { color: #8497b1; font-size: .57rem; letter-spacing: .07em; }
+.field-label .field-label-index { font-size: .48rem; letter-spacing: .16em; }
+.field-label:hover, .field-label:focus-visible, .field-label.is-selected { background: rgba(19, 32, 50, .9); box-shadow: 0 0 28px #86b9ff18; }
+.field-label.is-selected strong { color: white; }
+.field-readout { border-top: 1px solid #b3d1ff26; margin: 0 4vw; min-height: 165px; position: relative; }
+.field-invitation { padding: 24px 0; }
+.field-invitation p { font-size: 1.5rem; font-weight: 400; letter-spacing: -.03em; margin: 10px 0; }
+.field-invitation > span:last-child { color: #8497b1; font-size: .75rem; }
+.planet-overview.field-overview { display: grid; grid-template-columns: 1fr auto; gap: 7px 32px; margin: 0; max-width: none; padding: 20px 0; }
+.field-overview .eyebrow { margin: 0; }
+.planet-overview.field-overview h1 { font-size: 2rem; letter-spacing: -.05em; line-height: 1.1; margin: 0; }
+.field-overview .planet-fact { display: none; }
+.field-overview .overview-measurements { gap: 22px; margin: 6px 0 0; }
+.field-overview .primary-button { grid-column: 2; grid-row: 1 / 4; align-self: center; margin: 0; }
+.landing-page .field-caption { color: #8b9cb5; font-size: .53rem; left: auto; right: auto; letter-spacing: .1em; line-height: 1.8; margin: 0 4vw; padding: 12px 0 22px; position: relative; bottom: auto; }
+.field-caption span { color: #5f738e; display: block; font-size: .53rem; letter-spacing: .025em; }
+.field-fallback { color: #a3b9d4; padding: 180px 4vw 0; font-size: .8rem; }
+@media (max-width: 700px) {
+  .field-heading { left: 20px; top: 62px; }
+  .field-heading h1 { font-size: 1.35rem; }
+  .field-viewport { height: max(560px, 66svh); }
+  .field-label { padding: 7px 8px; }
+  .field-label strong { font-size: .71rem; }
+  .field-readout { margin: 0 20px; }
+  .planet-overview.field-overview { display: block; padding: 20px 0; }
+  .planet-overview.field-overview h1 { font-size: 1.65rem; margin: 10px 0; }
+  .field-overview .overview-measurements { gap: 16px; }
+  .field-overview .overview-measurements div:nth-child(n+3) { display: none; }
+  .field-overview .primary-button { margin-top: 18px; width: 100%; justify-content: space-between; }
+  .landing-page .field-caption { margin: 0 20px; }
+}
+
 * { box-sizing: border-box; }
 html, body { min-height: 100%; }
 body { margin: 0; background: var(--space); color: var(--ink); font-family: Arial, Helvetica, sans-serif; }

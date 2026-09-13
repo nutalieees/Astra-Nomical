@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { EvolveLifePanel } from "../components/alien/evolve-life-panel";
 import { PlanetSelector } from "../components/explorer/planet-selector";
+import { ExoplanetField } from "../components/explorer/exoplanet-field";
 import { PlanetOverview } from "../components/planet/planet-overview";
 import { ScienceHud } from "../components/planet/science-hud";
 import { EnterWorldTransition } from "../components/scene/enter-world-transition";
@@ -33,15 +34,8 @@ export default function Home() {
   if (view === "landing") {
     return (
       <main className="landing-page">
-        <div className="landing-stars" aria-hidden="true" />
         <header className="site-header"><span>ASTRA—NOMICAL</span><span>EXOPLANET EXPERIENCE / 01</span></header>
-        <section className="landing-hero">
-          <p className="eyebrow">A FIELD GUIDE TO DISTANT WORLDS</p>
-          <h1>Stand beneath an<br /><em>alien sky.</em></h1>
-          <p>Real exoplanet data, translated into a world you can enter.</p>
-          <button className="primary-button" type="button" onClick={() => setView("overview")}>BEGIN EXPLORING <span>↗</span></button>
-        </section>
-        <footer>NASA ARCHIVE DATA · VISUAL SCENARIOS, NOT ATMOSPHERIC MEASUREMENTS</footer>
+        <ExoplanetField onSelect={setSelectedPlanet} onEnterWorld={() => setView("transition")} />
       </main>
     );
   }
