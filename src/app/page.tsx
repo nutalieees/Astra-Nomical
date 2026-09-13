@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { EvolveLifePanel } from "../components/alien/evolve-life-panel";
 import { PlanetSelector } from "../components/explorer/planet-selector";
-import { ObservatoryLanding } from "../components/explorer/observatory-landing";
+import { ExoplanetField } from "../components/explorer/exoplanet-field";
 import { PlanetOverview } from "../components/planet/planet-overview";
 import { ScienceHud } from "../components/planet/science-hud";
 import { EnterWorldTransition } from "../components/scene/enter-world-transition";
@@ -34,7 +34,8 @@ export default function Home() {
   if (view === "landing") {
     return (
       <main className="landing-page">
-        <ObservatoryLanding onBegin={() => setView("overview")} />
+        <header className="site-header"><span>ASTRA—NOMICAL</span><span>EXOPLANET EXPERIENCE / 01</span></header>
+        <ExoplanetField onSelect={setSelectedPlanet} onEnterWorld={() => setView("transition")} />
       </main>
     );
   }
