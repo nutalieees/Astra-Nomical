@@ -331,3 +331,13 @@ button:focus-visible { outline: 2px solid #b7d9ff; outline-offset: 3px; }
   .world-organism-caption::before { margin-bottom: 10px; }
   .world-page:has(.life-panel:not(.is-collapsed)) .world-organism-caption { opacity: 0; }
 }
+/* Compact catalogue extension; the interactive five-system map stays primary. */
+.catalogue-search { position: fixed; z-index: 30; left: 24px; bottom: 64px; width: min(340px, calc(100vw - 48px)); padding: 14px; color: #d8e4ef; background: rgba(4, 10, 20, .94); border: 1px solid #263747; border-radius: 12px; font-size: 12px; }
+.catalogue-search summary { cursor: pointer; letter-spacing: .08em; }
+.catalogue-search label { display: block; margin-top: 16px; }
+.catalogue-search input { width: 100%; box-sizing: border-box; margin: 8px 0; padding: 10px; background: #101c29; color: white; border: 1px solid #475c70; border-radius: 6px; }
+.catalogue-search p { color: #a8bdce; }
+.catalogue-results { display: grid; gap: 5px; max-height: 220px; overflow: auto; }
+.catalogue-results button { padding: 9px; text-align: left; color: #e1edf6; background: #111f2d; border: 0; border-radius: 4px; cursor: pointer; }
+.catalogue-results button:hover, .catalogue-results button:focus-visible { background: #294257; }
+.catalogue-results button:disabled { opacity: .5; }

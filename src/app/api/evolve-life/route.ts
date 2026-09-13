@@ -1,8 +1,7 @@
 import { z } from "zod";
 import { evolveLife } from "../../../lib/ai/evolveLife";
 import { issueOrganismImageToken } from "../../../lib/ai/organism-image-ticket";
-import { deriveEnvironment } from "../../../lib/astronomy/environment";
-import { FEATURED_PLANETS } from "../../../lib/astronomy/planets-featured";
+import { resolveCatalogueWorld } from "../../../lib/astronomy/catalogue-server";
 import { evolveLifeEventSchema, type EvolveLifeEvent } from "../../../lib/evolve-life/stream";
 
 export const runtime = "nodejs";
@@ -18,12 +17,13 @@ export async function POST(request: Request) {
     if (body.length > 1024) throw new Error("Too large.");
     name = z.object({ planetName: z.string().min(1).max(120) }).strict().parse(JSON.parse(body)).planetName;
   } catch {
-    return Response.json({ error: "Select a valid featured world and retry." }, { status: 400 });
+    return Response.json({ error: "Select a valid catalogue world and retry." }, { status: 400 });
   }
-  const planet = FEATURED_PLANETS.find((value) => value.name === name);
-  if (!planet) return Response.json({ error: "This world is not available." }, { status: 400 });
+  let world: ReturnType<typeof resolveCatalogueWorld>;
+  try { world = resolveCatalogueWorld(name); }
+  catch { return Response.json({ error: "This world is not available." }, { status: 400 }); }
   // Astronomical inputs come from the same local catalogue as the UI, never from client edits.
-  const environment = deriveEnvironment(planet);
+  const { planet, environment } = world;
   const abort = new AbortController();
   let stopped = false;
   let cleanup = () => {};

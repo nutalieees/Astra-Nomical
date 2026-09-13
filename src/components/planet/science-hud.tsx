@@ -41,13 +41,13 @@ export function ScienceHud({ planet, environment, provenance, visualEnvironment 
   const rows: Readout[] = [
     { label: "RADIUS", value: format(planet.radiusEarth, "R⊕"), source: dataSource(provenance, "radiusEarth") },
     { label: "MASS", value: format(planet.massEarth, "M⊕"), source: dataSource(provenance, "massEarth") },
-    { label: "GRAVITY", value: `${environment.gravityEarth} g`, source: "derived" },
+    { label: "GRAVITY", value: `${environment.gravityEarth} g`, source: planet.massEarth == null || planet.radiusEarth == null ? "assumed" : "derived" },
     { label: "EQUILIBRIUM TEMP", value: format(planet.equilibriumTemperatureK, "K"), source: dataSource(provenance, "equilibriumTemperatureK") },
     { label: "ORBITAL DISTANCE", value: format(planet.orbitalDistanceAU, "AU"), source: dataSource(provenance, "orbitalDistanceAU") },
     { label: "HOST STAR", value: planet.starName ?? "Not available", source: "archive" },
     { label: "STELLAR TEMP", value: format(planet.starTemperatureK, "K"), source: dataSource(provenance, "starTemperatureK") },
     { label: "SPECTRAL TYPE", value: planet.starSpectralType ?? "Not available", source: "archive" },
-    { label: "ILLUMINATION", value: `${environment.illumination}× Earth`, source: "derived" },
+    { label: "ILLUMINATION", value: `${environment.illumination}× Earth`, source: planet.starRadiusSolar == null || planet.starTemperatureK == null || planet.orbitalDistanceAU == null ? "assumed" : "derived" },
   ];
   const measured = rows.filter((row) => row.source === "measured" || row.source === "archive");
   const derived = rows.filter((row) => row.source === "derived");

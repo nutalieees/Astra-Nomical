@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { EvolveLifePanel } from "../components/alien/evolve-life-panel";
 import { ExoplanetField } from "../components/explorer/exoplanet-field";
+import { CatalogueSearch } from "../components/explorer/catalogue-search";
+import { preparePlanetWorld, type PreparedWorld } from "../lib/astronomy/prepared-world";
 import { PlanetOverview } from "../components/planet/planet-overview";
 import { ScienceHud } from "../components/planet/science-hud";
 import { EnterWorldTransition } from "../components/scene/enter-world-transition";
 import { PlanetSurface } from "../components/scene/planet-surface";
-import { deriveEnvironment } from "../lib/astronomy/environment";
 import { FEATURED_PLANETS, FEATURED_PLANETS_PROVENANCE } from "../lib/astronomy/planets-featured";
-import { deriveVisualEnvironment } from "../lib/astronomy/visual-environment";
 import type { ValidatedOrganism } from "../types/astrobiology";
 import type { Planet } from "../types/planet";
 import type { OrganismSceneSpec } from "../lib/evolve-life/organism-scene";
@@ -18,12 +18,13 @@ type View = "landing" | "overview" | "transition" | "world";
 
 export default function Home() {
   const [selectedPlanet, setSelectedPlanet] = useState(FEATURED_PLANETS[0]);
+  const [prepared, setPrepared] = useState<PreparedWorld | null>(null);
   const [view, setView] = useState<View>("landing");
   const [specimen, setSpecimen] = useState<{ planetName: string; organism: ValidatedOrganism; scene: OrganismSceneSpec | null } | null>(null);
   const [organismVisible, setOrganismVisible] = useState(true);
   const [focusOrganism, setFocusOrganism] = useState(0);
-  const environment = useMemo(() => deriveEnvironment(selectedPlanet), [selectedPlanet]);
-  const visualEnvironment = useMemo(() => deriveVisualEnvironment(selectedPlanet, environment), [selectedPlanet, environment]);
+  const world = useMemo(() => prepared ?? preparePlanetWorld(selectedPlanet, FEATURED_PLANETS_PROVENANCE[selectedPlanet.name]), [prepared, selectedPlanet]);
+  const { environment, visualEnvironment } = world;
   const currentSpecimen = specimen?.planetName === selectedPlanet.name ? specimen : null;
 
   const navigate = useCallback((nextView: View) => {
@@ -33,6 +34,7 @@ export default function Home() {
     setView(nextView);
   }, []);
   const selectPlanet = useCallback((planet: Planet) => {
+    setPrepared(null);
     setSpecimen(null);
     setOrganismVisible(true);
     setFocusOrganism(0);
@@ -59,6 +61,7 @@ export default function Home() {
       <main className="landing-page">
         <header className="site-header"><span>ASTRA—NOMICAL</span><span>EXOPLANET EXPERIENCE / 01</span></header>
         <ExoplanetField onSelect={selectPlanet} onEnterWorld={() => navigate("transition")} />
+        <CatalogueSearch onPrepared={next => { selectPlanet(next.planet); setPrepared(next); navigate("overview"); }} />
       </main>
     );
   }
@@ -90,7 +93,7 @@ export default function Home() {
           planet={selectedPlanet}
           environment={environment}
           visualEnvironment={visualEnvironment}
-          provenance={FEATURED_PLANETS_PROVENANCE[selectedPlanet.name]}
+          provenance={world.provenance}
         />
         <EvolveLifePanel key={selectedPlanet.name} planet={selectedPlanet} environment={environment} onOrganismScene={receiveOrganismScene} organismVisible={organismVisible} onFocusOrganism={inspectOrganism} onToggleOrganism={toggleOrganism} />
         </div>

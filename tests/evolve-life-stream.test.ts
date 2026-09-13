@@ -5,7 +5,7 @@ import { Images } from "openai/resources/images";
 import { POST } from "../src/app/api/evolve-life/route";
 import { readOrganismImageToken } from "../src/lib/ai/organism-image-ticket";
 import { FEATURED_PLANETS } from "../src/lib/astronomy/planets-featured";
-import { deriveEnvironment } from "../src/lib/astronomy/environment";
+import { resolveCatalogueWorld } from "../src/lib/astronomy/catalogue-server";
 import { evolveLifeEventSchema, readEvolveLifeStream, type EvolveLifeEvent } from "../src/lib/evolve-life/stream";
 import pressures from "./fixtures/trappist-1e-scientist.json";
 import candidate from "./fixtures/trappist-1e-candidate.json";
@@ -94,7 +94,7 @@ test("route streams actual stage completions before the next model resolves, wit
     assert.deepEqual(Object.keys(result.result).sort(), ["illustrationToken", "organism", "pressures"]);
     const context = readOrganismImageToken(result.result.illustrationToken!);
     const planet = FEATURED_PLANETS.find((value) => value.name === "TRAPPIST-1 e")!;
-    assert.deepEqual(context, { planet, environment: deriveEnvironment(planet), organism: result.result.organism });
+    assert.deepEqual(context, { planet, environment: resolveCatalogueWorld(planet.name).environment, organism: result.result.organism });
     const payload = JSON.parse(Buffer.from(result.result.illustrationToken!.split(".")[0], "base64url").toString());
     assert.deepEqual(Object.keys(payload).sort(), ["environment", "expiresAt", "organism", "planet"]);
     assert.equal(JSON.stringify(payload).includes("Internal fixture assessment"), false);

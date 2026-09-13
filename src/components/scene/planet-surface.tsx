@@ -66,7 +66,7 @@ export function PlanetSurface({ planet, environment, visualEnvironment, organism
         <small>Illustrative anatomy and colour · survival is unverified{visualEnvironment.surfacePreset === "gas-giant" ? " · no solid surface assumed" : ""}</small>
       </aside>}
       {!failed && <div className="sky-controls" aria-label="Sky viewing controls">
-        <p>APPROXIMATE CATALOGUE RECONSTRUCTION</p>
+        <p>{skyStatus === "catalogue" ? "APPROXIMATE CATALOGUE RECONSTRUCTION" : "ILLUSTRATIVE SKY SCENARIO"}</p>
         <div>
           <button type="button" aria-pressed={skyScenario === "night"}
             onClick={()=>setSkyScenario(value=>value === "night" ? "host-lit" : "night")}>
