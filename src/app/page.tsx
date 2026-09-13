@@ -58,7 +58,7 @@ export default function Home() {
           visualEnvironment={visualEnvironment}
           provenance={FEATURED_PLANETS_PROVENANCE[selectedPlanet.name]}
         />
-        <EvolveLifePanel planet={selectedPlanet} environment={environment} />
+        <EvolveLifePanel key={selectedPlanet.name} planet={selectedPlanet} environment={environment} />
         </div>
       </main>
     );

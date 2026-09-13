@@ -136,13 +136,10 @@ button:focus-visible { outline: 2px solid #b7d9ff; outline-offset: 3px; }
 .world-look-controls button { pointer-events: auto; min-height: 40px; padding: 8px 12px; background: rgba(7, 10, 17, .55); border: 1px solid var(--line); }
 .world-hud { position: absolute; z-index: 5; bottom: max(16px, env(safe-area-inset-bottom)); left: 20px; right: 20px; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; pointer-events: none; }
 .world-hud > * { pointer-events: auto; touch-action: pan-y; overscroll-behavior: contain; }
-.world-hud .science-hud, .world-hud .evolve-panel { position: relative; inset: auto; padding: 12px; max-height: 55dvh; overflow: auto; background: rgba(8, 12, 20, .76); }
-.world-hud .science-hud { width: 280px; max-width: 330px; }
-.world-hud .evolve-panel { width: 245px; max-width: 280px; }
+.world-hud .science-hud, .world-hud .life-panel { position: relative; inset: auto; }
+.world-hud .science-hud { width: 280px; max-width: 330px; padding: 12px; max-height: 55dvh; overflow: auto; background: rgba(8, 12, 20, .76); }
 .world-hud .hud-grid { margin-top: 8px; gap: 0 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .world-hud .hud-grid div { min-height: 48px; padding: 6px 0 4px; }
-.world-hud .evolve-panel > p { font-size: .85rem; }
-.world-hud .evolve-panel .secondary-button { margin-top: 8px; padding: 10px 14px; min-height: 40px; }
 @media (max-width: 600px) {
   .world-header { padding: 16px; }
   .world-look-controls { top: 60px; gap: 8px; }
@@ -150,13 +147,98 @@ button:focus-visible { outline: 2px solid #b7d9ff; outline-offset: 3px; }
   .world-look-controls button { font-size: .55rem; padding: 6px 8px; }
   .world-hud { left: 10px; right: 10px; gap: 8px; }
   .world-hud .science-hud { width: 58%; padding: 10px; }
-  .world-hud .evolve-panel { width: 42%; padding: 10px; }
   .world-hud .science-hud.is-expanded { width: calc(100vw - 20px); max-width: none; }
-  .world-hud:has(.science-hud.is-expanded) .evolve-panel { display: none; }
   .world-hud .hud-grid { gap: 0 5px; }
   .world-hud .hud-grid dt { font-size: .45rem; letter-spacing: .03em; }
   .world-hud .hud-grid dd { font-size: .58rem; }
-  .world-hud .evolve-panel .eyebrow { font-size: .48rem; }
-  .world-hud .evolve-panel > p { font-size: .75rem; }
   .world-hud .simulation-toggle { font-size: .55rem; line-height: 1.4; }
+}
+
+/* A non-modal biosphere field panel: the world stays visible and interactive. */
+.world-header { z-index: 6; }
+.life-panel { width: min(410px, 39vw); max-width: none; max-height: calc(100dvh - 120px); padding: 20px; overflow: auto; background: linear-gradient(145deg, rgba(14, 25, 42, .92), rgba(7, 13, 25, .85)); border-color: rgba(172, 210, 230, .24); border-top-color: rgba(166, 226, 232, .6); border-radius: 3px; box-shadow: 0 16px 60px #0004; scrollbar-width: thin; scrollbar-color: #42556d transparent; }
+.life-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 25px; }
+.life-panel-heading .eyebrow { font-size: .55rem; letter-spacing: .16em; }
+.life-beacon { display: inline-block; width: 5px; height: 5px; margin-right: 4px; border-radius: 50%; background: #9bd6de; }
+.life-beacon.is-active { animation: life-pulse 1.8s ease-in-out infinite; }
+.life-icon-button { width: 30px; height: 30px; border: 0; background: transparent; cursor: pointer; color: #b7ccdf; font-size: 1.2rem; }
+.life-icon-button:hover { color: white; background: #c1e3ff12; }
+.life-intro h2 { font-family: Georgia, serif; font-size: 1.9rem; line-height: 1.08; font-weight: 400; margin: 15px 0 12px; }
+.life-intro p { max-width: 250px; color: #adbdd2; font-size: .75rem; line-height: 1.6; }
+.life-intro .secondary-button, .life-error .secondary-button { justify-content: space-between; width: 100%; }
+.life-progress-view, .life-result { animation: life-reveal .45s ease both; }
+.life-progress-title { border-bottom: 1px solid #a4c9ec22; padding: 20px 0 18px; }
+.life-step-count { color: #8fa7c2; font-size: .6rem; letter-spacing: .13em; }
+.life-progress-title h2 { font-size: 1.06rem; font-weight: 500; letter-spacing: .06em; margin: 9px 0; }
+.life-progress-title p { color: #a4b9d2; font-size: .75rem; margin: 0; }
+.life-stages { list-style: none; padding: 0; margin: 22px 0 8px; }
+.life-stages li { display: grid; grid-template-columns: 27px 1fr; gap: 14px; position: relative; min-height: 62px; padding-bottom: 17px; }
+.life-stages li:not(:last-child)::after { content: ""; position: absolute; width: 1px; top: 27px; left: 13px; bottom: 5px; background: #abc4df25; }
+.life-stage-marker { display: grid; place-items: center; width: 27px; height: 27px; font-size: .58rem; border: 1px solid #adcaec25; border-radius: 50%; color: #8ba0bd; transition: background .35s, color .35s; }
+.life-stages strong { display: block; font-size: .74rem; font-weight: 500; padding: 1px 0 6px; color: #b4c4db; }
+.life-stages li div > span { display: block; color: #94a6c0; font-size: .63rem; line-height: 1.45; }
+.life-stages .is-current strong { color: #f2f8ff; }
+.life-stages .is-current .life-stage-marker { border-color: #9be3eb; color: #d1f9ff; box-shadow: 0 0 20px #87cbdd24; animation: life-pulse 1.8s ease-in-out infinite; }
+.life-stages .is-done .life-stage-marker { border-color: #a0e1ca66; color: #b1efcf; background: #92dab415; }
+.life-stages .is-done div > span { color: #a8cebf; }
+.life-progress-footer { display: flex; gap: 10px; justify-content: space-between; align-items: center; border-top: 1px solid #a4c9ec22; padding-top: 10px; }
+.life-progress-footer > span { color: #95a8bd; font-size: .62rem; }
+.life-panel[data-state="validated"] .life-progress-title h2, .life-validation-note { color: #b1efcf; }
+.life-validation-note { font-size: .7rem; }
+.life-panel[data-state="error"] .life-stage-marker { animation: none; }
+.life-error { border-top: 1px solid #e7b98944; padding-top: 8px; }
+.life-error p { color: #edcaaa; font-size: .75rem; line-height: 1.5; }
+.life-error small { display: block; overflow-wrap: anywhere; margin-top: 12px; color: #8e9daf; font-size: .55rem; }
+.life-panel.is-collapsed { width: min(310px, 35vw); }
+.life-reopen { display: flex; justify-content: space-between; align-items: center; gap: 16px; width: 100%; border: 0; background: transparent; cursor: pointer; padding: 12px 0 0; color: #d1dfef; font-size: .62rem; letter-spacing: .05em; text-align: left; }
+.life-result-heading { padding: 16px 0 12px; }
+.life-reviewed { color: #ace0c5; font-size: .55rem; letter-spacing: .12em; }
+.life-result-heading h2 { font-family: Georgia, serif; font-weight: 400; font-size: 1.6rem; line-height: 1.12; margin: 12px 0 9px; overflow-wrap: anywhere; }
+.life-result-heading h2:focus { outline: none; }
+.life-result-heading > p { color: #92a9bd; font-size: .6rem; margin: 0; }
+.life-result-scroll { max-height: min(49dvh, 480px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #42556d transparent; padding-right: 5px; }
+.life-summary { color: #c0cddd; font-size: .72rem; line-height: 1.55; margin: 0 0 19px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.life-adaptations-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 9px; }
+.life-adaptations-heading .eyebrow { font-size: .48rem; letter-spacing: .06em; }
+.life-adaptations-heading > span:last-child { color: #9aadbe; font-size: .56rem; white-space: nowrap; }
+.life-adaptation { border-top: 1px solid #b9d9f127; }
+.life-adaptation > summary { list-style: none; display: grid; grid-template-columns: 17px 1fr 10px; align-items: start; gap: 9px; padding: 14px 0; cursor: pointer; color: #e4eef6; font-size: .72rem; line-height: 1.45; }
+.life-adaptation > summary::-webkit-details-marker, .life-notes > summary::-webkit-details-marker { display: none; }
+.life-trait-number { color: #839ab3; font-size: .54rem; margin-top: 3px; }
+.life-adaptation summary small { display: block; color: #8ab7cc; font-size: .56rem; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px; }
+.life-disclosure { color: #91b7c4; }
+.life-adaptation[open] > summary .life-disclosure { transform: rotate(45deg); }
+.life-causal-chain { margin: 0 0 8px 25px; padding-left: 12px; border-left: 1px solid #95dcd65c; }
+.life-causal-chain > div { padding: 0 0 12px; }
+.life-causal-chain > div > span { color: #a9d8d1; font-size: .49rem; letter-spacing: .12em; }
+.life-causal-chain p, .life-evidence p, .life-notes p, .life-notes li { color: #bfcedd; font-size: .69rem; line-height: 1.6; margin: 5px 0 0; }
+.life-causal-chain p.life-consequence { color: #94a7bb; }
+.life-evidence { margin: 2px 0 17px 25px; }
+.life-evidence summary { color: #a2cbdf; cursor: pointer; font-size: .63rem; }
+.life-evidence p.life-source { color: #93a6ba; padding-top: 8px; }
+.life-notes { border-top: 1px solid #b9d9f127; padding: 14px 0; }
+.life-notes > summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; color: #c6d8e7; font-size: .68rem; }
+.life-notes dl { display: grid; gap: 12px; margin: 14px 0; }
+.life-notes dt, .life-notes h3 { color: #92bccb; font-size: .57rem; letter-spacing: .06em; text-transform: uppercase; }
+.life-notes dd { color: #c0cddd; font-size: .7rem; line-height: 1.5; margin: 4px 0 0; }
+.life-notes ul { padding-left: 15px; }
+.life-science-note { color: #93a6ba; font-size: .61rem; line-height: 1.5; }
+.life-restart { display: flex; justify-content: space-between; gap: 12px; width: 100%; font-size: .56rem; padding: 15px 0 4px; }
+.life-panel summary:focus-visible { outline: 2px solid #b7d9ff; outline-offset: 2px; }
+@keyframes life-pulse { 50% { opacity: .55; box-shadow: 0 0 15px #90dddb44; } }
+@keyframes life-reveal { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 700px) {
+  .world-hud { top: 104px; bottom: max(14px, env(safe-area-inset-bottom)); left: 14px; right: 14px; display: block; }
+  .world-hud .science-hud, .world-hud .science-hud.is-expanded { position: absolute; top: 0; bottom: auto; left: 0; width: min(270px, calc(100vw - 28px)); max-height: 26dvh; max-width: none; }
+  .world-hud .life-panel { position: absolute; top: auto; bottom: 0; right: 0; width: min(410px, calc(100vw - 28px)); max-width: none; max-height: 53dvh; padding: 16px; }
+  .world-hud .life-panel.is-collapsed { width: min(310px, calc(100vw - 28px)); }
+  .life-panel.is-collapsed { width: min(310px, calc(100vw - 28px)); }
+  .life-progress-title { padding: 12px 0; }
+  .life-stages { margin-top: 15px; }
+  .life-stages li { min-height: 51px; padding-bottom: 12px; }
+  .life-result-scroll { max-height: calc(53dvh - 156px); }
+  .life-result-heading h2 { font-size: 1.3rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .life-panel *, .life-panel *::after { animation: none !important; transition: none !important; }
 }

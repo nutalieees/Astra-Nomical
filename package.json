@@ -6,21 +6,36 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "scientist": "node --conditions=react-server --import tsx scripts/run-planet-scientist.ts",
+    "test:scientist": "node --conditions=react-server --import tsx --test tests/planet-scientist.test.ts",
+    "evolution": "node --conditions=react-server --import tsx scripts/run-evolution-agent.ts",
+    "test:evolution": "node --conditions=react-server --import tsx --test tests/evolution-agent.test.ts",
+    "test:agents": "node --conditions=react-server --import tsx --test tests/planet-scientist.test.ts tests/evolution-agent.test.ts tests/scientific-critic.test.ts tests/evolve-life.test.ts",
+    "critic": "node --conditions=react-server --import tsx scripts/run-scientific-critic.ts",
+    "test:critic": "node --conditions=react-server --import tsx --test tests/scientific-critic.test.ts",
+    "evolve:compare": "node --conditions=react-server --import tsx scripts/run-evolve-life.ts",
+    "test:evolve": "node --conditions=react-server --import tsx --test tests/evolve-life.test.ts",
+    "test:frontend": "node --conditions=react-server --import tsx --test tests/evolve-life-stream.test.ts"
   },
   "dependencies": {
+    "@next/env": "^15.5.25",
+    "@openai/agents": "^0.18.0",
     "@react-three/fiber": "^9.7.0",
     "@types/three": "^0.186.0",
     "next": "^15.5.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "three": "^0.186.0"
+    "server-only": "^0.0.1",
+    "three": "^0.186.0",
+    "zod": "^4.6.4"
   },
   "devDependencies": {
     "@next/swc-wasm-nodejs": "^15.5.25",
     "@types/node": "^22.15.30",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
+    "tsx": "^4.23.13",
     "typescript": "^5.8.3"
   }
 }

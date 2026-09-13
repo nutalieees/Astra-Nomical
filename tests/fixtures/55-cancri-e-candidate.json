@@ -1,0 +1,32 @@
+{
+  "name": "Conditional compact resting unit",
+  "summary": "A hypothetical compact resting unit, meaningful only if biochemically tolerable conditions exist. Such conditions, a solvent and an energy supply are unverified; survival at the modeled extreme heating is not supported.",
+  "morphology": {
+    "size": "A microscopic compact unit; proposed size rather than an observation.",
+    "bodyPlan": "A compact form with no tall supporting structures.",
+    "locomotion": "No active locomotion or load-bearing appendages.",
+    "surfaceCovering": "A layered envelope with limited absorption control, not insulation sufficient for the modeled extreme heat.",
+    "sensorySystems": "Local thermal gating only; active sensing at extreme temperatures is not established."
+  },
+  "adaptations": [
+    {
+      "environmentalPressure": "temperature",
+      "consequence": "The modeled extreme heating does not establish conditions compatible with active biochemistry.",
+      "adaptation": "Thermally gated quiescence only within an unspecified viable biochemical range.",
+      "reasoning": "If tolerable conditions exist, quiescence could lower activity demand; it cannot protect indefinitely at 1958 K or establish a cooler habitat."
+    },
+    {
+      "environmentalPressure": "gravity",
+      "consequence": "The derived 2.273 g increases the cost of supporting and moving mass.",
+      "adaptation": "A microscopic compact form without tall structures or active locomotion.",
+      "reasoning": "Compact anatomy limits support and movement demands, sacrificing relocation and exploration."
+    },
+    {
+      "environmentalPressure": "illumination",
+      "consequence": "The derived intense incident flux creates a substantial absorption constraint.",
+      "adaptation": "Limited absorption control by a layered envelope.",
+      "reasoning": "If a viable biochemical setting exists, reduced absorption could limit energy uptake, with a cost to resource exchange; no envelope is claimed to make the modeled environment survivable."
+    }
+  ],
+  "survivalStrategy": "No viable active strategy is established by these inputs. Compact quiescence and limited absorption control are conditional design ideas only, requiring an unverified tolerable setting, solvent and energy source; they do not confer survival at the modeled extreme temperature."
+}

@@ -52,8 +52,9 @@ height is independent of any ground. Reduced motion pauses idle and cloud motion
 Rotation listeners are attached only to Canvas, never HUD panels. HUD input also
 pauses idle, but cannot turn the view. Canvas uses `touch-action: none`; scrollable
 HUD panels use `pan-y` and contained overscroll. Compact science metrics expand to
-all labels/assumptions; on narrow screens expanded science temporarily occupies
-the bottom dock, with Evolve Life available again when collapsed.
+all labels/assumptions. On narrow screens science sits below the look controls
+and Evolve Life sits at the bottom, each with bounded scrolling. Expanding science
+does not hide an active life simulation or its Retry action.
 
 Clouds use three 120 × 120-cell curved layers extending ±5000 scene units beyond
 the bounded giant scenarios' tangent horizons, density shaders and differential

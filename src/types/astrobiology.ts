@@ -18,6 +18,7 @@ export interface EnvironmentalPressure {
 }
 
 export interface CandidateAdaptation {
+  /** Exact factor of one supplied EnvironmentalPressure; factors must be unique per run. */
   environmentalPressure: string;
   consequence: string;
   adaptation: string;
