@@ -86,14 +86,14 @@ function CataloguePoints({ data, scenario, exposure, atmosphereOpacity, rotation
   useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => {
     if (!material.current) return;
-    material.current.uniforms.magnitudeLimit.value = exposure === "enhanced" ? 10 : 6.5;
-    const atmosphericTransmission = Math.max(0.08, 1 - atmosphereOpacity * 0.72);
-    material.current.uniforms.opacity.value = atmosphericTransmission * (scenario === "night" ? 0.9 : 0.22);
+    material.current.uniforms.magnitudeLimit.value = exposure === "enhanced" ? 10 : 7.25;
+    const atmosphericTransmission = Math.max(0.28, 1 - atmosphereOpacity * 0.5);
+    material.current.uniforms.opacity.value = atmosphericTransmission * (scenario === "night" ? 1.2 : 0.42);
   }, [exposure, scenario, atmosphereOpacity]);
   useFrame(({ camera }) => { if (group.current) group.current.position.copy(camera.position); });
   const uniforms = useMemo(() => ({
-    magnitudeLimit: { value: exposure === "enhanced" ? 10 : 6.5 },
-    opacity: { value: Math.max(0.08, 1 - atmosphereOpacity * 0.72) * (scenario === "night" ? 0.9 : 0.22) },
+    magnitudeLimit: { value: exposure === "enhanced" ? 10 : 7.25 },
+    opacity: { value: Math.max(0.28, 1 - atmosphereOpacity * 0.5) * (scenario === "night" ? 1.2 : 0.42) },
     pixelRatio: { value: pixelRatio },
   }), [pixelRatio]);
   return <group ref={group} rotation={rotation}>
@@ -104,10 +104,10 @@ function CataloguePoints({ data, scenario, exposure, atmosphereOpacity, rotation
           uniform float magnitudeLimit, opacity, pixelRatio;
           void main(){
             float visible=1.0-smoothstep(magnitudeLimit-0.35,magnitudeLimit+0.05,apparentMagnitude);
-            float compressed=log2(1.0+max(relativeFlux,0.0)*8.0)/log2(9.0);
-            vColor=mix(vec3(1.0),color,0.58);
-            vAlpha=visible*opacity*clamp(0.28+compressed,0.22,1.0);
-            gl_PointSize=clamp((1.15+3.4*sqrt(clamp(compressed,0.0,2.0)))*pixelRatio,1.0,7.5*pixelRatio);
+            float compressed=log2(1.0+max(relativeFlux,0.0)*32.0)/log2(33.0);
+            vColor=mix(vec3(1.0),color,0.48);
+            vAlpha=visible*opacity*clamp(0.58+compressed*0.9,0.5,1.35);
+            gl_PointSize=clamp((1.8+4.2*sqrt(clamp(compressed,0.0,2.0)))*pixelRatio,1.8*pixelRatio,9.5*pixelRatio);
             gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);
           }`}
         fragmentShader={`varying vec3 vColor; varying float vAlpha;
@@ -134,5 +134,5 @@ function IllustrativeFallback({ planetName, rotation }: { planetName: string; ro
   useFrame(({ camera }) => { if (group.current) group.current.position.copy(camera.position); });
   return <group ref={group} rotation={rotation}><points frustumCulled={false}><bufferGeometry>
     <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-  </bufferGeometry><pointsMaterial color="#dce8ff" size={1.15} transparent opacity={0.38} depthTest depthWrite={false} fog={false} /></points></group>;
+  </bufferGeometry><pointsMaterial color="#e8f1ff" size={1.8} transparent opacity={0.65} depthTest depthWrite={false} fog={false} /></points></group>;
 }
