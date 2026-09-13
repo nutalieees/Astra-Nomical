@@ -1,5 +1,6 @@
 node_modules/
 .next/
+.next-planet-scene/
 out/
 *.tsbuildinfo
 .DS_Store

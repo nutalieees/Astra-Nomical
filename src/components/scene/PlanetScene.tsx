@@ -24,11 +24,11 @@ export interface PlanetSceneProps {
 
 /** The existing Canvas scene: all appearance comes from the visual mapper. */
 export function PlanetScene({ planet, visualEnvironment: v, resetView = 0, movement,
-  skyScenario = "night", skyExposure = "natural", onSkyStatus }: PlanetSceneProps) {
+  skyScenario = "host-lit", skyExposure = "natural", onSkyStatus }: PlanetSceneProps) {
   const seed = useMemo(() => seedFromName(planet.name), [planet.name]);
   const celestialRotation = useMemo<[number,number,number]>(() => [
-    skyScenario === "night" ? -Math.PI * 0.7 : -0.08,
-    (seed % 360) * Math.PI / 180,
+    skyScenario === "night" ? -Math.PI * 0.7 : 0,
+    skyScenario === "night" ? (seed % 360) * Math.PI / 180 : 0,
     0,
   ], [seed, skyScenario]);
   const surface = useMemo(() => createSurface(v, seed, v.surfacePreset === "gas-giant"), [v, seed]);
@@ -132,23 +132,41 @@ function Rocks({ v, rocks, variant }: { v: VisualEnvironment; rocks: RockPlaceme
   return <instancedMesh ref={instances} geometry={geometry} material={material} args={[undefined, undefined, rocks.length]} castShadow receiveShadow />;
 }
 function CelestialHost({ v, rotation }: { v: VisualEnvironment; rotation: [number,number,number] }) {
-  const group = useRef<Group>(null);
-  useFrame(({ camera }) => { if (group.current) group.current.position.copy(camera.position); });
-  return <group ref={group} rotation={rotation}><HostStar v={v} /></group>;
+  return <group rotation={rotation}><HostStar v={v} /></group>;
 }
 
 function MoltenChannels({v,heightAt}:{v:VisualEnvironment;heightAt:(x:number,z:number)=>number}) {
   const geometry=useMemo(()=>{
-    const positions:number[]=[],indices:number[]=[];
-    for(let channel=0;channel<3;channel++) for(let i=0;i<=600;i++) {
-      const z=-180+i*.6, x=moltenChannelX(z,channel), width=.65+.25*Math.sin(z*.13+channel);
-      for(const side of [-1,1]) {const px=x+side*width;positions.push(px,heightAt(px,z)+.055,z);}
-      if(i<600) {const a=(channel*601+i)*2;indices.push(a,a+2,a+1,a+1,a+2,a+3);}
+    const positions:number[]=[],indices:number[]=[],uvs:number[]=[];
+    for(let channel=0;channel<v.lavaChannelCount;channel++) for(let i=0;i<=600;i++) {
+      const z=-180+i*.6, x=moltenChannelX(z,channel), width=v.lavaChannelWidth*(channel===5?1.5:channel<3?1:.55)*(1+.28*Math.sin(z*.13+channel));
+      for(let cross=0;cross<=8;cross++) {const u=cross/8,px=x+(u*2-1)*width;positions.push(px,heightAt(px,z)+.055,z);uvs.push(u,z);}
+      if(i<600) for(let cross=0;cross<8;cross++) {const a=(channel*601+i)*9+cross;indices.push(a,a+9,a+1,a+1,a+9,a+10);}
     }
-    const result=new BufferGeometry();result.setAttribute("position",new Float32BufferAttribute(positions,3));result.setIndex(indices);result.computeVertexNormals();return result;
-  },[heightAt]);
+    const result=new BufferGeometry();result.setAttribute("position",new Float32BufferAttribute(positions,3));result.setAttribute("uv",new Float32BufferAttribute(uvs,2));result.setIndex(indices);result.computeVertexNormals();return result;
+  },[heightAt,v.lavaChannelCount,v.lavaChannelWidth]);
   useEffect(()=>()=>geometry.dispose(),[geometry]);
-  return <mesh geometry={geometry}><meshStandardMaterial color={v.groundAccentColor} emissive={v.groundAccentColor} emissiveIntensity={v.emissiveIntensity} roughness={.35} side={DoubleSide} polygonOffset polygonOffsetFactor={-1} /></mesh>;
+  const material=useMemo(()=>{
+    // Lava emits its own orange colour; suppress stellar white glare on the melt.
+    const result=new MeshStandardMaterial({color:"#080200",roughness:1,side:DoubleSide,polygonOffset:true,polygonOffsetFactor:-1});
+    result.onBeforeCompile=shader=>{
+      shader.uniforms.lavaOrange={value:new Color(v.groundAccentColor)};
+      shader.uniforms.lavaCore={value:new Color(v.lavaCoreColor)};
+      shader.uniforms.lavaHeat={value:v.emissiveIntensity};
+      shader.vertexShader="varying vec2 flowUv;\n"+shader.vertexShader;
+      shader.vertexShader=shader.vertexShader.replace("#include <begin_vertex>","#include <begin_vertex>\n flowUv=uv;");
+      shader.fragmentShader="varying vec2 flowUv; uniform vec3 lavaOrange,lavaCore; uniform float lavaHeat;\n"+NOISE+shader.fragmentShader;
+      shader.fragmentShader=shader.fragmentShader.replace("#include <emissivemap_fragment>",`#include <emissivemap_fragment>
+        float edge=1.-abs(flowUv.x*2.-1.);
+        float turbulence=fbm(vec2(flowUv.x*7.,flowUv.y*.25));
+        float core=smoothstep(.25,.9,edge)*smoothstep(.2,.75,turbulence);
+        float crust=smoothstep(.12,.26,turbulence);
+        totalEmissiveRadiance=mix(lavaOrange,lavaCore,core)*lavaHeat*smoothstep(0.,.22,edge)*mix(.12,1.,crust);`);
+    };
+    result.customProgramCacheKey=()=>"branched-lava-v1";return result;
+  },[v.groundAccentColor,v.lavaCoreColor,v.emissiveIntensity]);
+  useEffect(()=>()=>material.dispose(),[material]);
+  return <mesh geometry={geometry} material={material} />;
 }
 
 const NOISE = `

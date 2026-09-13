@@ -31,6 +31,9 @@ export interface VisualEnvironment {
   rockScale: number;
   frostCoverage: number;
   emissiveIntensity: number;
+  lavaChannelCount: number;
+  lavaChannelWidth: number;
+  lavaCoreColor: string;
   cloudOpacity: number;
   cloudColor: string;
   cloudAccentColor: string;

@@ -26,7 +26,7 @@ export function PlanetSurface({ planet, environment, visualEnvironment, onReturn
   const [resetView, setResetView] = useState(0);
   const [attempt,setAttempt]=useState(0),[failed,setFailed]=useState(false),[measure,setMeasure]=useState(0),[stats,setStats]=useState("");
   const [failureToken,setFailureToken]=useState(0);
-  const [skyScenario,setSkyScenario]=useState<SkyScenario>("night");
+  const [skyScenario,setSkyScenario]=useState<SkyScenario>("host-lit");
   const [skyExposure,setSkyExposure]=useState<SkyExposure>("natural");
   const [skyStatus,setSkyStatus]=useState<SkyLoadStatus>("loading");
   const movement=useRef<MovementInput>({held:new Set(),steps:[0,0]});

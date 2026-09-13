@@ -70,8 +70,8 @@ export function createSurface(v: VisualEnvironment, seed: number, clouds = false
     } else if (v.landscape === "ridges") {
       geology = Math.pow(1 - Math.abs(relief(x * .055, z * .018, seed + 7)), 5) * v.terrainAmplitude * .7;
     } else if (v.landscape === "volcanic") {
-      const channelDistance = Math.min(...[0,1,2].map(channel => Math.abs(x - moltenChannelX(z, channel))));
-      geology = -Math.exp(-channelDistance * channelDistance / 4) * 1.4;
+      const channelDistance = Math.min(...Array.from({length:v.lavaChannelCount},(_,channel) => Math.abs(x - moltenChannelX(z, channel))));
+      geology = -Math.exp(-channelDistance * channelDistance / (v.lavaChannelWidth*v.lavaChannelWidth*4)) * 1.4;
     }
     const y = clouds ? curvature + relief(x * 0.008, z * 0.014, seed) * v.cloudHeight
       : curvature + hills * (v.landscape === "craters" ? 0.15 : 0.12 + ramp * 0.88)
@@ -104,8 +104,13 @@ export function createSurface(v: VisualEnvironment, seed: number, clouds = false
   return { geometry, heightAt };
 }
 
-export const moltenChannelX = (z: number, channel: number) =>
-  [-28, 24, 74][channel] + Math.sin(z * .038 + channel * 2) * 11 + Math.sin(z * .13 + channel) * 2;
+export function moltenChannelX(z: number, channel: number): number {
+  if (channel === 5) return 5 + Math.sin(z*.035)*9;
+  if (channel < 3) return [-28, 24, 74][channel] + Math.sin(z * .038 + channel * 2) * 11 + Math.sin(z * .13 + channel) * 2;
+  // Two tributaries join and separate from the main rivers at deterministic intervals.
+  const left=channel-3, blend=(1+Math.sin(z*.045+left*2))/2;
+  return moltenChannelX(z,left)*(1-blend)+moltenChannelX(z,left+1)*blend;
+}
 
 export interface RockPlacement {
   x: number; y: number; z: number; sx: number; sy: number; sz: number; rotation: number; shade: number; radius: number;
@@ -114,16 +119,18 @@ export interface RockPlacement {
 export function createRocks(v: VisualEnvironment, seed: number, heightAt: (x: number, z: number) => number): RockPlacement[] {
   const random = randomSource(seed + 19);
   return Array.from({length: v.rockCount}, () => {
-    const angle = random() * Math.PI * 2, distance = 10 + random() * 110;
+    const angle = random() * Math.PI * 2, distance = 10 + Math.pow(random(),1.35) * 110;
     const x = Math.cos(angle) * distance, z = 12 + Math.sin(angle) * distance;
     const scale = (.3 + Math.pow(random(), 2.6) * 2.9) * v.rockScale;
     const sx = scale * (.65 + random() * .65), sz = scale * (.65 + random() * .5);
-    const sy = scale * (v.landscape === "glacial" ? 1.7 : v.landscape === "craters" ? .36 : .65 + random() * .4);
+    const sy = scale * (v.landscape === "glacial" ? 2.1 : v.landscape === "craters" ? .5 : .9 + random() * .5);
     const radius = Math.max(sx, sz) * 1.18;
-    const bottom = Math.min(heightAt(x,z), ...Array.from({length: 8}, (_, i) => heightAt(x + Math.cos(i*Math.PI/4)*radius, z + Math.sin(i*Math.PI/4)*radius)));
-    // Restore the proof-of-concept's exposed rock silhouettes; lower roots stay embedded.
-    return {x,y:bottom+sy*.45,z,sx,sy,sz,radius,rotation:random()*Math.PI*2,shade:.75+random()*.55};
-  });
+    // Centre-rooted formations: using the lowest footprint sample buried whole
+    // boulders on hillsides. Keep the root embedded but expose the actual 3D crag.
+    const root = heightAt(x,z);
+    return {x,y:root+sy*.2,z,sx,sy,sz,radius,rotation:random()*Math.PI*2,shade:.75+random()*.55};
+  }).filter(rock=>v.landscape!=="volcanic" || Array.from({length:v.lavaChannelCount},(_,channel)=>
+    Math.abs(rock.x-moltenChannelX(rock.z,channel))).every(distance=>distance>rock.radius+v.lavaChannelWidth*1.8));
 }
 
 /** Small substeps prevent tunnelling, circle bounds keep movement inside detailed terrain. */
