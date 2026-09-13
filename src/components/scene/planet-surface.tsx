@@ -31,8 +31,18 @@ export function PlanetSurface({ planet, environment, visualEnvironment }: Planet
         <PlanetScene planet={planet} environment={environment} visualEnvironment={visualEnvironment} resetView={resetView} />
       </Canvas>
       <div className="world-look-controls">
-        <span>Drag to look around · 360° view</span>
+        <span>Drag to look · 360° view<br /><small>WASD / arrows to move · bounded exploration</small></span>
         <button className="text-button" type="button" onClick={() => setResetView(value => value + 1)}>RESET VIEW</button>
+      </div>
+      <div aria-label="Walking controls" style={{ position: "absolute", top: 130, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 8, zIndex: 4 }}>
+        {([ ["left", "←"], ["forward", "↑"], ["back", "↓"], ["right", "→"] ] as const).map(([direction, label]) => {
+          const signal = (element: HTMLButtonElement, active: boolean) => element.closest(".world-page")?.dispatchEvent(new CustomEvent("observer-move", { detail: { direction, active } }));
+          return <button key={direction} type="button" className="secondary-button" aria-label={`Move ${direction}`} style={{ margin: 0, padding: "10px 16px", touchAction: "none" }}
+            onPointerDown={event => { event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); signal(event.currentTarget, true); }}
+            onPointerUp={event => signal(event.currentTarget, false)}
+            onPointerCancel={event => signal(event.currentTarget, false)}
+            onLostPointerCapture={event => signal(event.currentTarget, false)}>{label}</button>;
+        })}
       </div>
     </div>
   );
