@@ -18,7 +18,7 @@ export default function Home() {
   const [selectedPlanet, setSelectedPlanet] = useState(FEATURED_PLANETS[0]);
   const [view, setView] = useState<View>("landing");
   const environment = useMemo(() => deriveEnvironment(selectedPlanet), [selectedPlanet]);
-  const visualEnvironment = useMemo(() => deriveVisualEnvironment(environment), [environment]);
+  const visualEnvironment = useMemo(() => deriveVisualEnvironment(selectedPlanet, environment), [selectedPlanet, environment]);
 
   useEffect(() => {
     if (view !== "transition") return;
@@ -60,6 +60,7 @@ export default function Home() {
         <ScienceHud
           planet={selectedPlanet}
           environment={environment}
+          visualEnvironment={visualEnvironment}
           provenance={FEATURED_PLANETS_PROVENANCE[selectedPlanet.name]}
         />
         <EvolveLifePanel planet={selectedPlanet} environment={environment} />

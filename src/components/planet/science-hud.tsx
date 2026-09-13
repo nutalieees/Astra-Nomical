@@ -3,10 +3,12 @@
 import { useState } from "react";
 import type { Planet, PlanetFieldProvenance } from "../../types/planet";
 import type { PlanetEnvironment } from "../../types/environment";
+import type { VisualEnvironment } from "../../types/visual-environment";
 
 interface ScienceHudProps {
   planet: Planet;
   environment: PlanetEnvironment;
+  visualEnvironment?: VisualEnvironment;
   provenance?: PlanetFieldProvenance;
 }
 
@@ -34,7 +36,7 @@ function dataSource(
   return source === "measured" || source === "derived" || source === "assumed" ? source : "archive";
 }
 
-export function ScienceHud({ planet, environment, provenance }: ScienceHudProps) {
+export function ScienceHud({ planet, environment, provenance, visualEnvironment }: ScienceHudProps) {
   const [expanded, setExpanded] = useState(false);
   const rows: Readout[] = [
     { label: "RADIUS", value: format(planet.radiusEarth, "R⊕"), source: dataSource(provenance, "radiusEarth") },
@@ -92,9 +94,9 @@ export function ScienceHud({ planet, environment, provenance }: ScienceHudProps)
         <section>
           <h2>Visual assumptions</h2>
           {inputAssumptions.length > 0 && <p>Curated input assumptions are marked above and are not presented as measurements: {inputAssumptions.map((row) => row.label.toLowerCase()).join(", ")}.</p>}
-          <p className="visual-scenario">Atmosphere visual scenario: <b>{environment.atmospherePreset}</b>. This is not a measured atmospheric composition.</p>
+          <p className="visual-scenario">Atmosphere visual scenario: <b>{visualEnvironment?.surfacePreset === "gas-giant" ? "upper-atmosphere cloud layers" : environment.atmospherePreset}</b>. This is not a measured atmospheric composition.</p>
           <ul>
-            {environment.assumptions.map((assumption) => <li key={assumption}>{assumption}</li>)}
+            {(visualEnvironment?.assumptions ?? environment.assumptions).map((assumption) => <li key={assumption}>{assumption}</li>)}
           </ul>
         </section>
       </div>}

@@ -21,7 +21,8 @@ export function PlanetSurface({ planet, environment, visualEnvironment }: Planet
   return (
     <div className="planet-surface">
       <Canvas
-        camera={{ fov: 58, near: 0.1, far: 260 }}
+        camera={{ fov: 58, near: 0.15, far: 1800 }}
+        shadows
         dpr={[1, 1.5]}
         gl={{ antialias: true, powerPreference: "high-performance" }}
       >

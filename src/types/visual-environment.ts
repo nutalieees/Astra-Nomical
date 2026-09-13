@@ -1,39 +1,40 @@
-/**
- * Bounded, renderer-facing settings derived from PlanetEnvironment.
- *
- * These values are deliberately visual scenarios rather than new scientific
- * measurements. A scene can consume them directly without handling missing
- * astronomy fields or making unbounded Three.js values.
- */
-export type SurfacePreset = "temperate-rock" | "ice-rock" | "lava-rock" | "gas-giant";
-
+/** All artistic controls are bounded by deriveVisualEnvironment. Scene distances are compressed. */
 export interface VisualEnvironment {
-  /** Stable visual scenario used to select the planet material/geometry. */
-  surfacePreset: SurfacePreset;
-
-  /** CSS-safe colors for the scene's sky, horizon haze, and terrain. */
+  surfacePreset: "cold-rock" | "temperate-rock" | "lava-rock" | "gas-giant";
   skyColor: string;
   horizonColor: string;
   groundColor: string;
   groundAccentColor: string;
-
-  /** Host-star appearance, copied from the scientific environment. */
   starColor: string;
-
-  /** Safe Three.js-ready lighting controls. */
   starIntensity: number;
+  /** Bounded, visually scaled angular radius in radians. */
   starSize: number;
+  starPosition: [number, number, number];
   ambientIntensity: number;
+  fillColor: string;
+  exposure: number;
   atmosphereOpacity: number;
   hazeDensity: number;
-
-  /** Low-cost procedural surface controls, kept in deliberate safe ranges. */
+  fogNear: number;
+  fogFar: number;
   terrainAmplitude: number;
   terrainFrequency: number;
+  horizonRadius: number;
   horizonCurvature: number;
-  cloudOpacity: number;
+  roughness: number;
+  rockCount: number;
+  rockScale: number;
+  frostCoverage: number;
   emissiveIntensity: number;
-
-  /** Human-readable visual assumptions, suitable for a later scene HUD. */
+  cloudOpacity: number;
+  cloudColor: string;
+  cloudAccentColor: string;
+  cloudSpeed: number;
+  cloudHeight: number;
+  starfieldOpacity: number;
+  cameraHeight: number;
+  cameraSway: number;
+  cameraSpeed: number;
+  cameraLookHeight: number;
   assumptions: string[];
 }
