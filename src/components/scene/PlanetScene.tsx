@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import {
   AdditiveBlending,
   BackSide,
   BufferGeometry,
+  Color,
   Float32BufferAttribute,
   MathUtils,
+  Points as ThreePoints,
   SphereGeometry,
   Vector3,
 } from "three";
@@ -37,6 +39,7 @@ export function PlanetScene({
   const terrain = useTerrainGeometry(planet.name, visualEnvironment);
   const starfield = useStarfield(planet.name);
   const terrainRadius = TERRAIN_RADIUS / visualEnvironment.horizonCurvature;
+  const particles = useAtmosphereParticles(planet.name, visualEnvironment, terrainRadius);
   const starPosition = useMemo(
     () => STAR_POSITION.clone().multiplyScalar(0.72 + visualEnvironment.starSize * 0.08),
     [visualEnvironment.starSize]
@@ -45,6 +48,7 @@ export function PlanetScene({
 
   useEffect(() => () => terrain.dispose(), [terrain]);
   useEffect(() => () => starfield.dispose(), [starfield]);
+  useEffect(() => () => particles.dispose(), [particles]);
 
   return (
     <>
@@ -75,11 +79,13 @@ export function PlanetScene({
           metalness={visualEnvironment.surfacePreset === "lava-rock" ? 0.18 : 0.03}
           emissive={visualEnvironment.groundAccentColor}
           emissiveIntensity={visualEnvironment.emissiveIntensity}
+          vertexColors
         />
       </mesh>
 
       <HorizonHaze visualEnvironment={visualEnvironment} radius={terrainRadius} />
-      <CameraDrift gravityEarth={environment.gravityEarth} />
+      <AtmosphericParticles geometry={particles} visualEnvironment={visualEnvironment} />
+      <CameraDrift gravityEarth={environment.gravityEarth} visualEnvironment={visualEnvironment} />
     </>
   );
 }
@@ -109,6 +115,14 @@ function HostStar({
     <mesh position={position}>
       <sphereGeometry args={[starRadius, 24, 16]} />
       <meshBasicMaterial color={color} toneMapped={false} />
+      <mesh scale={1.9 + intensity * 0.16}>
+        <sphereGeometry args={[starRadius, 20, 14]} />
+        <meshBasicMaterial color={color} transparent opacity={0.12} depthWrite={false} blending={AdditiveBlending} />
+      </mesh>
+      <mesh scale={3.1 + intensity * 0.2}>
+        <sphereGeometry args={[starRadius, 16, 12]} />
+        <meshBasicMaterial color={color} transparent opacity={0.035} depthWrite={false} blending={AdditiveBlending} />
+      </mesh>
       <pointLight color={color} intensity={intensity * 1.15} distance={150} decay={1.4} />
     </mesh>
   );
@@ -137,24 +151,67 @@ function HorizonHaze({
   );
 }
 
-function CameraDrift({ gravityEarth }: { gravityEarth: number }) {
+function CameraDrift({
+  gravityEarth,
+  visualEnvironment,
+}: {
+  gravityEarth: number;
+  visualEnvironment: VisualEnvironment;
+}) {
   const { camera } = useThree();
-  const lookTarget = useMemo(() => new Vector3(0, -1, -42), []);
+  const treatment = useMemo(
+    () => cameraTreatmentFor(visualEnvironment.surfacePreset),
+    [visualEnvironment.surfacePreset]
+  );
+  const lookTarget = useMemo(
+    () => new Vector3(0, treatment.targetHeight, treatment.targetDistance),
+    [treatment.targetDistance, treatment.targetHeight]
+  );
   const height = MathUtils.clamp(3.3 - Math.log2(Math.max(gravityEarth, 0.2)) * 0.18, 2.8, 3.8);
 
   useEffect(() => {
-    camera.position.set(0, height, 9.5);
+    camera.position.set(0, height + treatment.heightOffset, treatment.distance);
     camera.lookAt(lookTarget);
   }, [camera, height, lookTarget]);
 
   useFrame(({ clock }) => {
     const elapsed = clock.getElapsedTime();
-    camera.position.x = Math.sin(elapsed * 0.13) * 0.55;
-    camera.position.y = height + Math.sin(elapsed * 0.19) * 0.12;
-    camera.lookAt(lookTarget.x, lookTarget.y + Math.sin(elapsed * 0.11) * 0.35, lookTarget.z);
+    camera.position.x = Math.sin(elapsed * treatment.swaySpeed) * treatment.sway;
+    camera.position.y = height + treatment.heightOffset + Math.sin(elapsed * treatment.bobSpeed) * treatment.bob;
+    camera.lookAt(lookTarget.x, lookTarget.y + Math.sin(elapsed * 0.11) * treatment.targetDrift, lookTarget.z);
   });
 
   return null;
+}
+
+function AtmosphericParticles({
+  geometry,
+  visualEnvironment,
+}: {
+  geometry: BufferGeometry;
+  visualEnvironment: VisualEnvironment;
+}) {
+  const points = useRef<ThreePoints>(null);
+  const isGiant = visualEnvironment.surfacePreset === "gas-giant";
+  const isLava = visualEnvironment.surfacePreset === "lava-rock";
+
+  useFrame((_, delta) => {
+    if (points.current) points.current.rotation.y += delta * (isGiant ? 0.024 : isLava ? 0.06 : 0.015);
+  });
+
+  return (
+    <points ref={points} geometry={geometry}>
+      <pointsMaterial
+        color={visualEnvironment.groundAccentColor}
+        size={isGiant ? 0.72 : isLava ? 0.38 : 0.24}
+        sizeAttenuation
+        transparent
+        opacity={isGiant ? 0.34 : isLava ? 0.5 : 0.25}
+        depthWrite={false}
+        blending={AdditiveBlending}
+      />
+    </points>
+  );
 }
 
 function Starfield({ geometry }: { geometry: BufferGeometry }) {
@@ -180,6 +237,10 @@ function useTerrainGeometry(name: string, visualEnvironment: VisualEnvironment):
     const positions = geometry.attributes.position;
     const seed = hash(name);
     const amplitude = visualEnvironment.terrainAmplitude * radius;
+    const colors = new Float32Array(positions.count * 3);
+    const ground = new Color(visualEnvironment.groundColor);
+    const accent = new Color(visualEnvironment.groundAccentColor);
+    const vertexColor = new Color();
 
     for (let index = 0; index < positions.count; index += 1) {
       const x = positions.getX(index);
@@ -192,20 +253,77 @@ function useTerrainGeometry(name: string, visualEnvironment: VisualEnvironment):
           ? Math.sin((unit.y * 11 + unit.x * 2.5 + seed) * 1.7) * 0.42
           : 0;
       const displacedRadius = radius + (noise + banding) * amplitude;
+      const accentMix = terrainAccentMix(visualEnvironment.surfacePreset, noise, banding, unit.y);
 
       positions.setXYZ(index, unit.x * displacedRadius, unit.y * displacedRadius, unit.z * displacedRadius);
+      vertexColor.copy(ground).lerp(accent, accentMix);
+      vertexColor.toArray(colors, index * 3);
     }
 
     positions.needsUpdate = true;
+    geometry.setAttribute("color", new Float32BufferAttribute(colors, 3));
     geometry.computeVertexNormals();
     return geometry;
   }, [
     name,
     visualEnvironment.horizonCurvature,
+    visualEnvironment.groundAccentColor,
+    visualEnvironment.groundColor,
     visualEnvironment.surfacePreset,
     visualEnvironment.terrainAmplitude,
     visualEnvironment.terrainFrequency,
   ]);
+}
+
+function useAtmosphereParticles(
+  name: string,
+  visualEnvironment: VisualEnvironment,
+  radius: number
+): BufferGeometry {
+  return useMemo(() => {
+    const count = visualEnvironment.surfacePreset === "gas-giant" ? 340 : 220;
+    const random = seededRandom(hash(`${name}:${visualEnvironment.surfacePreset}:particles`));
+    const positions = new Float32Array(count * 3);
+
+    for (let index = 0; index < positions.length; index += 3) {
+      const theta = random() * Math.PI * 2;
+      const y = random() * 2 - 1;
+      const horizontal = Math.sqrt(1 - y * y);
+      const shell = radius + 0.8 + random() * (visualEnvironment.surfacePreset === "gas-giant" ? 10 : 4);
+      positions[index] = Math.cos(theta) * horizontal * shell;
+      positions[index + 1] = y * shell - radius;
+      positions[index + 2] = Math.sin(theta) * horizontal * shell;
+    }
+
+    const geometry = new BufferGeometry();
+    geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
+    return geometry;
+  }, [name, radius, visualEnvironment.surfacePreset]);
+}
+
+function terrainAccentMix(
+  preset: VisualEnvironment["surfacePreset"],
+  noise: number,
+  banding: number,
+  elevation: number
+): number {
+  if (preset === "gas-giant") return MathUtils.clamp(0.42 + banding * 1.05 + noise * 0.2, 0.08, 0.88);
+  if (preset === "lava-rock") return MathUtils.clamp(0.18 + (noise + 0.8) * 0.48, 0.08, 0.92);
+  if (preset === "ice-rock") return MathUtils.clamp(0.36 + noise * 0.25 + Math.max(elevation, 0) * 0.18, 0.12, 0.82);
+  return MathUtils.clamp(0.24 + noise * 0.34, 0.08, 0.72);
+}
+
+function cameraTreatmentFor(preset: VisualEnvironment["surfacePreset"]) {
+  switch (preset) {
+    case "gas-giant":
+      return { distance: 11.5, heightOffset: 0.3, targetHeight: -2.2, targetDistance: -50, sway: 0.86, swaySpeed: 0.09, bob: 0.18, bobSpeed: 0.14, targetDrift: 0.65 };
+    case "lava-rock":
+      return { distance: 8.4, heightOffset: -0.25, targetHeight: -0.5, targetDistance: -35, sway: 0.34, swaySpeed: 0.19, bob: 0.08, bobSpeed: 0.28, targetDrift: 0.22 };
+    case "ice-rock":
+      return { distance: 10.8, heightOffset: 0.45, targetHeight: -1.8, targetDistance: -48, sway: 0.66, swaySpeed: 0.11, bob: 0.1, bobSpeed: 0.16, targetDrift: 0.4 };
+    default:
+      return { distance: 9.5, heightOffset: 0, targetHeight: -1, targetDistance: -42, sway: 0.55, swaySpeed: 0.13, bob: 0.12, bobSpeed: 0.19, targetDrift: 0.35 };
+  }
 }
 
 function useStarfield(name: string): BufferGeometry {

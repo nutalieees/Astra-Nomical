@@ -78,7 +78,21 @@ export function deriveVisualEnvironment(environment: PlanetEnvironment): VisualE
     emissiveIntensity = 0;
   }
 
-  const atmosphereOpacity = atmosphereOpacityFor(environment.atmospherePreset);
+  const physicalAtmosphereOpacity = atmosphereOpacityFor(environment.atmospherePreset);
+  // This is a cinematic scattering control, not an assertion about composition.
+  // It keeps lava heat shimmer and giant-world cloud decks readable even when
+  // the scientific fallback selected an "airless" atmosphere preset.
+  const atmosphereOpacity =
+    surfacePreset === "gas-giant"
+      ? Math.max(physicalAtmosphereOpacity, 0.44)
+      : surfacePreset === "lava-rock"
+        ? Math.max(physicalAtmosphereOpacity, 0.1)
+        : physicalAtmosphereOpacity;
+  if (surfacePreset === "gas-giant" || surfacePreset === "lava-rock") {
+    assumptions.push(
+      "Enhanced haze represents a cinematic cloud deck or thermal shimmer; it is not a measurement of atmospheric density."
+    );
+  }
   const starIntensity = clamp(0.65 + Math.log10(Math.max(environment.illumination, 0.01) + 1) * 0.55, 0.65, 3.2);
   const starSize = clamp(0.45 + Math.sqrt(Math.max(environment.apparentStarSize, 0.01)) * 0.34, 0.45, 3.5);
 
