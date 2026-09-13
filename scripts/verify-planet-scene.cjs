@@ -9,7 +9,7 @@ const { Mesh, MeshBasicMaterial, Raycaster, Vector3 } = require('three');
 const { FEATURED_PLANETS } = require('../src/lib/astronomy/planets-featured.ts');
 const { deriveEnvironment } = require('../src/lib/astronomy/environment.ts');
 const { deriveVisualEnvironment } = require('../src/lib/astronomy/visual-environment.ts');
-const { createSurface, seedFromName } = require('../src/components/scene/surface-geometry.ts');
+const { createSurface, seedFromName, createRocks, safeObserverMove } = require('../src/components/scene/surface-geometry.ts');
 const expected = { 'TRAPPIST-1 e': 'cold-rock', '55 Cancri e': 'lava-rock', 'WASP-121 b': 'gas-giant' };
 for (const planet of FEATURED_PLANETS) {
   const environment = deriveEnvironment(planet);
@@ -45,6 +45,26 @@ for (const planet of FEATURED_PLANETS) {
   // Look down toward all surrounding azimuths: every ray must meet real geometry.
   const atmospheric = visual.surfacePreset === 'gas-giant';
   const surround = createSurface(visual, seedFromName(planet.name), atmospheric);
+  const rocks=createRocks(visual,seedFromName(planet.name),surround.heightAt);
+  assert.deepEqual(rocks,createRocks(visual,seedFromName(planet.name),surround.heightAt));
+  let observer={x:0,z:12.25};
+  for(let step=0;step<500;step++) {
+    const angle=step*.09;
+    observer=safeObserverMove(observer.x,observer.z,Math.cos(angle)*.2,Math.sin(angle)*.2,visual,surround.heightAt,rocks);
+    assert(Math.hypot(observer.x,observer.z-12.25)<=visual.movementRadius+1e-6);
+    if(!atmospheric) assert(!rocks.some(rock=>Math.hypot(observer.x-rock.x,observer.z-rock.z)<rock.radius+.65));
+    assert(Number.isFinite(surround.heightAt(observer.x,observer.z)+visual.cameraHeight));
+  }
+  const flat=()=>0;
+  const boundedMove=safeObserverMove(0,12.25,200,0,visual,flat,[]);
+  assert(Math.hypot(boundedMove.x,boundedMove.z-12.25)<=visual.movementRadius);
+  if(!atmospheric) {
+    const obstacle={x:3,z:12.25,radius:1};
+    const blocked=safeObserverMove(0,12.25,8,0,visual,flat,[obstacle]);
+    assert(blocked.x<1.36,'No tunnelling through a rock');
+    const slope=safeObserverMove(0,12.25,1,0,visual,(x)=>x*2,[]);
+    assert.equal(slope.x,0,'Steep slopes must block movement');
+  }
   const surroundMesh = new Mesh(surround.geometry, new MeshBasicMaterial());
   if (atmospheric) surroundMesh.position.y = -26;
   surroundMesh.updateMatrixWorld(true);

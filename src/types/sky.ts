@@ -51,6 +51,9 @@ export interface ArduinoSkyCatalogue {
 }
 
 export type CartesianVector = [number, number, number];
+export type SkyScenario = "host-lit" | "night";
+export type SkyExposure = "natural" | "enhanced";
+export type SkyLoadStatus = "loading" | "catalogue" | "illustrative-fallback";
 
 /** Offline-enriched catalogue input in equatorial J2000 Cartesian coordinates. */
 export interface CatalogueStar {

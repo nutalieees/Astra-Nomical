@@ -1,5 +1,10 @@
 /** All artistic controls are bounded by deriveVisualEnvironment. Scene distances are compressed. */
 export interface VisualEnvironment {
+  landscape: "ridges" | "craters" | "glacial" | "volcanic" | "clouds";
+  atmosphereScenario: string;
+  movementRadius: number;
+  movementSpeed: number;
+  maxSlope: number;
   surfacePreset: "cold-rock" | "temperate-rock" | "lava-rock" | "gas-giant";
   skyColor: string;
   horizonColor: string;
