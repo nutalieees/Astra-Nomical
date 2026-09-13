@@ -94,7 +94,7 @@ export function ScienceHud({ planet, environment, provenance, visualEnvironment 
         <section>
           <h2>Visual assumptions</h2>
           {inputAssumptions.length > 0 && <p>Curated input assumptions are marked above and are not presented as measurements: {inputAssumptions.map((row) => row.label.toLowerCase()).join(", ")}.</p>}
-          <p className="visual-scenario">Atmosphere visual scenario: <b>{visualEnvironment?.surfacePreset === "gas-giant" ? "upper-atmosphere cloud layers" : environment.atmospherePreset}</b>. This is not a measured atmospheric composition.</p>
+          <p className="visual-scenario">Atmosphere visual scenario: <b>{visualEnvironment?.atmosphereScenario ?? environment.atmospherePreset}</b>. This is not a measured atmospheric composition.</p>
           <ul>
             {(visualEnvironment?.assumptions ?? environment.assumptions).map((assumption) => <li key={assumption}>{assumption}</li>)}
           </ul>

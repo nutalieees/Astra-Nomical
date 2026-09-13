@@ -2,44 +2,58 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { BackSide, DoubleSide, Color, InstancedMesh, MeshStandardMaterial, Object3D, ShaderMaterial, Vector3 } from "three";
+import { BackSide, DoubleSide, BufferGeometry, Float32BufferAttribute, Group, IcosahedronGeometry, Color, InstancedMesh, MeshStandardMaterial, Object3D, ShaderMaterial, Vector3 } from "three";
 import type { PlanetEnvironment } from "../../types/environment";
 import type { Planet } from "../../types/planet";
 import type { VisualEnvironment } from "../../types/visual-environment";
-import { createSurface, randomSource, seedFromName } from "./surface-geometry";
-import { ObserverCamera } from "./observer-camera";
+import type { SkyExposure, SkyLoadStatus, SkyScenario } from "../../types/sky";
+import { createSurface, createRocks, moltenChannelX, seedFromName, type RockPlacement } from "./surface-geometry";
+import { ObserverCamera, type MovementInput } from "./observer-camera";
+import { CatalogueSky } from "./catalogue-sky";
 
 export interface PlanetSceneProps {
   planet: Planet;
   environment: PlanetEnvironment;
   visualEnvironment: VisualEnvironment;
   resetView?: number;
+  movement?: MovementInput;
+  skyScenario?: SkyScenario;
+  skyExposure?: SkyExposure;
+  onSkyStatus?: (status: SkyLoadStatus) => void;
 }
-
 /** The existing Canvas scene: all appearance comes from the visual mapper. */
-export function PlanetScene({ planet, visualEnvironment: v, resetView = 0 }: PlanetSceneProps) {
+export function PlanetScene({ planet, visualEnvironment: v, resetView = 0, movement,
+  skyScenario = "night", skyExposure = "natural", onSkyStatus }: PlanetSceneProps) {
   const seed = useMemo(() => seedFromName(planet.name), [planet.name]);
+  const celestialRotation = useMemo<[number,number,number]>(() => [
+    skyScenario === "night" ? -Math.PI * 0.7 : -0.08,
+    (seed % 360) * Math.PI / 180,
+    0,
+  ], [seed, skyScenario]);
   const surface = useMemo(() => createSurface(v, seed, v.surfacePreset === "gas-giant"), [v, seed]);
+  const rocks = useMemo(() => createRocks(v, seed, surface.heightAt), [v,seed,surface]);
   useEffect(() => () => surface.geometry.dispose(), [surface]);
   return <>
     <color attach="background" args={[v.skyColor]} />
     <fog attach="fog" args={[v.horizonColor, v.fogNear, v.fogFar]} />
     <Sky v={v} />
-    <HostStar v={v} />
-    <Starfield v={v} seed={seed} />
-    <hemisphereLight args={[v.fillColor, v.groundColor, v.ambientIntensity]} />
-    <directionalLight position={v.starPosition} color={v.starColor} intensity={v.starIntensity}
+    <CatalogueSky planetName={planet.name} scenario={skyScenario} exposure={skyExposure}
+      atmosphereOpacity={v.atmosphereOpacity} rotation={celestialRotation} onStatus={onSkyStatus} />
+    <CelestialHost v={v} rotation={celestialRotation} />
+    <hemisphereLight args={[v.fillColor, v.groundColor, v.ambientIntensity * (skyScenario === "night" ? 0.48 : 1)]} />
+    <group rotation={celestialRotation}><directionalLight position={v.starPosition} color={v.starColor}
+      intensity={v.starIntensity * (skyScenario === "night" ? 0.22 : 1)}
       castShadow shadow-mapSize={[1024, 1024]} shadow-bias={-0.0004}
       shadow-camera-left={-65} shadow-camera-right={65} shadow-camera-top={65} shadow-camera-bottom={-65}
-      shadow-camera-near={1} shadow-camera-far={1000} shadow-normalBias={0.12} />
+      shadow-camera-near={1} shadow-camera-far={1000} shadow-normalBias={0.12} /></group>
     {v.surfacePreset === "gas-giant"
       ? <CloudDeck v={v} seed={seed} />
-      : <RockySurface v={v} seed={seed} surface={surface} />}
-    <ObserverCamera v={v} heightAt={surface.heightAt} resetView={resetView} />
+      : <RockySurface v={v} rocks={rocks} surface={surface} />}
+    <ObserverCamera v={v} heightAt={surface.heightAt} rocks={rocks} resetView={resetView} movement={movement} />
   </>;
 }
 
-function RockySurface({ v, seed, surface }: { v: VisualEnvironment; seed: number; surface: ReturnType<typeof createSurface> }) {
+function RockySurface({ v, rocks, surface }: { v: VisualEnvironment; rocks: RockPlacement[]; surface: ReturnType<typeof createSurface> }) {
   const material = useMemo(() => {
     const result = new MeshStandardMaterial({ color: v.groundColor, roughness: v.roughness });
     result.onBeforeCompile = shader => {
@@ -54,10 +68,9 @@ function RockySurface({ v, seed, surface }: { v: VisualEnvironment; seed: number
         float vein = abs(sin(terrainPoint.x*0.17 + sin(terrainPoint.z*0.055)*2.8 + fbm(terrainPoint.xz*0.09)*3.0));
         float fissure = (1.0-smoothstep(0.025,0.10,vein))*step(0.01,heat);
         diffuseColor.rgb *= mix(0.5,1.45,grit);
-        diffuseColor.rgb = mix(diffuseColor.rgb,vec3(0.55,0.56,0.53),frost*smoothstep(0.65,0.82,grit));
-        diffuseColor.rgb = mix(diffuseColor.rgb,accent,fissure*0.7);`);
+        diffuseColor.rgb = mix(diffuseColor.rgb,accent,frost*smoothstep(0.28,0.7,grit));`);
       shader.fragmentShader = shader.fragmentShader.replace("#include <emissivemap_fragment>",
-        "#include <emissivemap_fragment>\n totalEmissiveRadiance = accent * heat * fissure;");
+        "#include <emissivemap_fragment>\n totalEmissiveRadiance = vec3(0.0);");
       shader.fragmentShader = shader.fragmentShader.replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
         vec3 qx=dFdx(vViewPosition), qy=dFdy(vViewPosition);
         float dx=dFdx(grit), dy=dFdy(grit);
@@ -69,39 +82,76 @@ function RockySurface({ v, seed, surface }: { v: VisualEnvironment; seed: number
   useEffect(() => () => material.dispose(), [material]);
   return <>
     <mesh geometry={surface.geometry} material={material} receiveShadow />
-    <Rocks v={v} seed={seed} heightAt={surface.heightAt} />
+    {[0,1,2].map(variant => <Rocks key={variant} v={v} rocks={rocks.filter((_,i)=>i%3===variant)} variant={variant} />)}
+    {v.landscape === "volcanic" && <MoltenChannels v={v} heightAt={surface.heightAt} />}
   </>;
 }
 
-function Rocks({ v, seed, heightAt }: { v: VisualEnvironment; seed: number; heightAt: (x: number, z: number) => number }) {
+function Rocks({ v, rocks, variant }: { v: VisualEnvironment; rocks: RockPlacement[]; variant: number }) {
   const instances = useRef<InstancedMesh>(null);
+  const material=useMemo(()=>{
+    const result=new MeshStandardMaterial({roughness:v.roughness,emissive:v.groundColor,emissiveIntensity:v.ambientIntensity*.06});
+    result.onBeforeCompile=shader=>{
+      shader.vertexShader="varying vec3 stonePoint;\n"+shader.vertexShader;
+      shader.vertexShader=shader.vertexShader.replace("#include <begin_vertex>","#include <begin_vertex>\n stonePoint=position;");
+      shader.fragmentShader="varying vec3 stonePoint;\n"+NOISE+shader.fragmentShader;
+      shader.fragmentShader=shader.fragmentShader.replace("#include <color_fragment>",`#include <color_fragment>
+        vec2 q=vec2(stonePoint.x+stonePoint.y*.7,stonePoint.z-stonePoint.y*.35)*4.;
+        float grit=fbm(q); float fracture=abs(sin(stonePoint.y*13.+grit*4.));
+        diffuseColor.rgb*=mix(.65,1.3,grit)*mix(.72,1.,smoothstep(.03,.13,fracture));`);
+    };
+    result.customProgramCacheKey=()=>"weathered-stone-v1";return result;
+  },[v.roughness,v.groundColor,v.ambientIntensity]);
+  useEffect(()=>()=>material.dispose(),[material]);
+  const geometry = useMemo(() => {
+    const result = new IcosahedronGeometry(1, v.landscape === "craters" ? 2 : 1);
+    const positions = result.attributes.position;
+    for(let i=0;i<positions.count;i++) {
+      const x=positions.getX(i),y=positions.getY(i),z=positions.getZ(i);
+      const factor=1+Math.sin(x*7+y*3+variant)*Math.cos(z*9+variant)*.14;
+      positions.setXYZ(i,x*factor,y*factor,z*factor);
+    }
+    result.computeVertexNormals(); return result;
+  },[v.landscape,variant]);
+  useEffect(()=>()=>geometry.dispose(),[geometry]);
   useLayoutEffect(() => {
-    const random = randomSource(seed + 19), matrix = new Object3D(), color = new Color(v.groundColor);
-    for (let index = 0; index < v.rockCount; index++) {
-      const angle = random() * Math.PI * 2, distance = 10 + random() * 115;
-      let x = Math.cos(angle) * distance, z = 12 + Math.sin(angle) * distance;
-      // Reserve the entire camera's movement corridor.
-      if (Math.hypot(x, z - 12) < 6) x += x < 0 ? -8 : 8;
-      const scale = (0.25 + Math.pow(random(), 3) * 3.3) * v.rockScale;
-      const y = Math.min(heightAt(x,z), heightAt(x-scale,z), heightAt(x+scale,z), heightAt(x,z-scale), heightAt(x,z+scale));
-      matrix.position.set(x, y + scale * 0.35, z);
-      matrix.scale.set(scale * (0.8 + random()), scale * 0.8, scale);
-      matrix.rotation.set(0, random()*Math.PI*2, 0); matrix.updateMatrix();
+    const matrix = new Object3D(), color = new Color(v.groundColor).lerp(new Color(v.groundAccentColor),v.frostCoverage*.5);
+    for (let index = 0; index < rocks.length; index++) {
+      const rock=rocks[index];
+      matrix.position.set(rock.x,rock.y,rock.z);
+      matrix.scale.set(rock.sx,rock.sy,rock.sz);
+      matrix.rotation.set(0,rock.rotation,0); matrix.updateMatrix();
       instances.current!.setMatrixAt(index, matrix.matrix);
-      instances.current!.setColorAt(index, color.clone().multiplyScalar(0.7 + random()*0.65));
+      instances.current!.setColorAt(index, color.clone().multiplyScalar(rock.shade));
     }
     instances.current!.instanceMatrix.needsUpdate = true;
     if (instances.current!.instanceColor) instances.current!.instanceColor.needsUpdate = true;
     instances.current!.computeBoundingSphere();
-  }, [seed, v, heightAt]);
-  return <instancedMesh ref={instances} args={[undefined, undefined, v.rockCount]} castShadow receiveShadow>
-    <icosahedronGeometry args={[1, 1]} />
-    <meshStandardMaterial roughness={v.roughness} />
-  </instancedMesh>;
+  }, [rocks, v]);
+  return <instancedMesh ref={instances} geometry={geometry} material={material} args={[undefined, undefined, rocks.length]} castShadow receiveShadow />;
+}
+function CelestialHost({ v, rotation }: { v: VisualEnvironment; rotation: [number,number,number] }) {
+  const group = useRef<Group>(null);
+  useFrame(({ camera }) => { if (group.current) group.current.position.copy(camera.position); });
+  return <group ref={group} rotation={rotation}><HostStar v={v} /></group>;
+}
+
+function MoltenChannels({v,heightAt}:{v:VisualEnvironment;heightAt:(x:number,z:number)=>number}) {
+  const geometry=useMemo(()=>{
+    const positions:number[]=[],indices:number[]=[];
+    for(let channel=0;channel<3;channel++) for(let i=0;i<=600;i++) {
+      const z=-180+i*.6, x=moltenChannelX(z,channel), width=.65+.25*Math.sin(z*.13+channel);
+      for(const side of [-1,1]) {const px=x+side*width;positions.push(px,heightAt(px,z)+.055,z);}
+      if(i<600) {const a=(channel*601+i)*2;indices.push(a,a+2,a+1,a+1,a+2,a+3);}
+    }
+    const result=new BufferGeometry();result.setAttribute("position",new Float32BufferAttribute(positions,3));result.setIndex(indices);result.computeVertexNormals();return result;
+  },[heightAt]);
+  useEffect(()=>()=>geometry.dispose(),[geometry]);
+  return <mesh geometry={geometry}><meshStandardMaterial color={v.groundAccentColor} emissive={v.groundAccentColor} emissiveIntensity={v.emissiveIntensity} roughness={.35} side={DoubleSide} polygonOffset polygonOffsetFactor={-1} /></mesh>;
 }
 
 const NOISE = `
-float hash2(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float hash2(vec2 p){vec3 p3=fract(vec3(p.xyx)*.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}
 float noise2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);
 return mix(mix(hash2(i),hash2(i+vec2(1,0)),f.x),mix(hash2(i+vec2(0,1)),hash2(i+vec2(1,1)),f.x),f.y);}
 float fbm(vec2 p){return noise2(p)*0.55+noise2(p*2.1)*0.28+noise2(p*4.3)*0.12+noise2(p*8.7)*0.05;}
@@ -124,7 +174,6 @@ function Sky({ v }: { v: VisualEnvironment }) {
       }`} />
   </mesh>;
 }
-
 function HostStar({ v }: { v: VisualEnvironment }) {
   const distance = new Vector3(...v.starPosition).length();
   const radius = Math.tan(v.starSize) * distance;
@@ -152,6 +201,7 @@ function CloudLayer({ layer, v, seed }: { layer: number; v: VisualEnvironment; s
     opacity: { value: layer === 0 ? 1 : v.cloudOpacity }, seed: { value: seed % 1000 + layer*19 },
     horizon: { value: new Color(v.horizonColor) },
     fogRange: { value: [v.fogNear, v.fogFar] },
+    starDirection: { value: new Vector3(...v.starPosition).normalize() },
   }), [v,seed,layer]);
   useEffect(() => () => surface.geometry.dispose(), [surface]);
   useEffect(() => {
@@ -163,26 +213,15 @@ function CloudLayer({ layer, v, seed }: { layer: number; v: VisualEnvironment; s
   useFrame((_, delta) => { if(material.current && !reduced.current) material.current.uniforms.time.value+=Math.min(delta, 0.1)*v.cloudSpeed*(1+layer*0.7); });
   return <mesh geometry={surface.geometry} position={[0,-26+layer*11,0]} renderOrder={layer}>
     <shaderMaterial ref={material} side={DoubleSide} transparent={layer>0} depthWrite={layer===0} uniforms={uniforms}
-      vertexShader={`varying vec3 p;varying float depth;void main(){p=position;vec4 view=modelViewMatrix*vec4(position,1.);depth=-view.z;gl_Position=projectionMatrix*view;}`}
-      fragmentShader={NOISE+`varying vec3 p;varying float depth;uniform float time,opacity,seed;uniform vec3 dark,light,horizon;uniform vec2 fogRange;
-      void main(){vec2 q=p.xz*vec2(.012,.027)+vec2(time,seed);float n=fbm(q+vec2(fbm(q*.65)*3.,0.));
+      vertexShader={`varying vec3 p,cloudNormal;varying float depth;void main(){p=position;cloudNormal=normalize(mat3(modelMatrix)*normal);vec4 view=modelViewMatrix*vec4(position,1.);depth=-view.z;gl_Position=projectionMatrix*view;}`}
+      fragmentShader={NOISE+`varying vec3 p,cloudNormal;varying float depth;uniform float time,opacity,seed;uniform vec3 dark,light,horizon,starDirection;uniform vec2 fogRange;
+      void main(){vec2 q=p.xz*vec2(.016,.024)+vec2(time,seed);float n=fbm(q+vec2(fbm(q*.65)*3.,0.));
       float bands=fbm(q*vec2(.45,2.3)); float density=smoothstep(.22,.76,n*.75+bands*.25);
       float billows=fbm(q*3.1+vec2(n*2.));
-      vec3 c=mix(dark,light,smoothstep(.12,.82,density*.7+billows*.3));c=mix(c,horizon,smoothstep(fogRange.x,fogRange.y,depth));
+      vec3 c=mix(dark,light,smoothstep(.12,.82,density*.7+billows*.3));c*=.55+.45*max(0.,dot(normalize(cloudNormal),starDirection));c=mix(c,horizon,smoothstep(fogRange.x,fogRange.y,depth));
       gl_FragColor=vec4(c,opacity>=1.?1.:smoothstep(.18,.65,n)*opacity);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
       }`} />
   </mesh>;
-}
-
-function Starfield({ v, seed }: { v: VisualEnvironment; seed: number }) {
-  const positions=useMemo(()=>{
-    const random=randomSource(seed), values=new Float32Array(1200*3);
-    for(let i=0;i<values.length;i+=3){const a=random()*Math.PI*2,y=random(),r=1150;
-      values.set([Math.cos(a)*Math.sqrt(1-y*y)*r,y*r,Math.sin(a)*Math.sqrt(1-y*y)*r],i);}
-    return values;
-  },[seed]);
-  return <points><bufferGeometry><bufferAttribute attach="attributes-position" args={[positions,3]} /></bufferGeometry>
-    <pointsMaterial color={v.starColor} size={0.7} transparent opacity={v.starfieldOpacity} depthWrite={false} fog={false} /></points>;
 }

@@ -1,0 +1,15 @@
+{
+  "catalogue": "HYG Database v4.1",
+  "upstreamRepository": "https://github.com/astronexus/HYG-Database",
+  "pinnedCommit": "3bf37f4b2d5460e1278286320d1d62fab9b493c1",
+  "downloadUrl": "https://raw.githubusercontent.com/astronexus/HYG-Database/3bf37f4b2d5460e1278286320d1d62fab9b493c1/hyg/CURRENT/hygdata_v41.csv",
+  "retrievedAt": "2026-09-13",
+  "file": "hygdata_v41.csv",
+  "sha256": "d9f69fd86bbf90a4e4d52b4c5c53eacfa6dfc0bfdef85bfd94f095e0bebe4ebd",
+  "coordinateFrame": "equatorial, J2000 epoch and equinox",
+  "positionUnit": "pc",
+  "photometricBand": "V (HYG visual magnitude)",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://github.com/astronexus/HYG-Database/blob/3bf37f4b2d5460e1278286320d1d62fab9b493c1/LICENSE",
+  "attribution": "HYG Database by David Nash / Astronexus"
+}

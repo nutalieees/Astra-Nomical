@@ -45,6 +45,7 @@ export default function Home() {
           planet={selectedPlanet}
           environment={environment}
           visualEnvironment={visualEnvironment}
+          onReturnToOverview={() => setView("overview")}
         />
         <header className="world-header">
           <button className="brand-button" type="button" onClick={() => setView("overview")}>ASTRA—NOMICAL</button>

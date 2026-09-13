@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "retrievedAt": "2026-09-13",
+  "source": {
+    "name": "NASA Exoplanet Archive Planetary Systems Composite Parameters",
+    "url": "https://exoplanetarchive.ipac.caltech.edu/TAP/sync",
+    "table": "pscomppars",
+    "query": "select pl_name,hostname,ra,dec,sy_dist,sy_disterr1,sy_disterr2,st_rad,st_teff,pl_orbsmax from pscomppars where pl_name in ('TRAPPIST-1 e','Proxima Cen b','55 Cnc e','WASP-121 b','Kepler-186 f')",
+    "rawResponseSha256": "497c98af36020def5cff5cc90f2ba424e3729dc42cc72b01f1532d7a4508a3eb",
+    "coordinateFrame": "ICRS",
+    "coordinateEpoch": "J2000",
+    "distanceUnit": "pc"
+  },
+  "systems": [
+    {
+      "planetName": "TRAPPIST-1 e",
+      "archivePlanetName": "TRAPPIST-1 e",
+      "hostName": "TRAPPIST-1",
+      "rightAscensionDeg": 346.6263919,
+      "declinationDeg": -5.0434618,
+      "distancePc": 12.42988881,
+      "distanceUpperErrorPc": 0.01870661,
+      "distanceLowerErrorPc": -0.01870661,
+      "hostRadiusSolar": 0.1192,
+      "hostTemperatureK": 2566,
+      "orbitalSemiMajorAxisAu": 0.02925,
+      "hostHygIds": [],
+      "significantCompanions": []
+    },
+    {
+      "planetName": "Proxima Centauri b",
+      "archivePlanetName": "Proxima Cen b",
+      "hostName": "Proxima Cen",
+      "rightAscensionDeg": 217.3934657,
+      "declinationDeg": -62.6761821,
+      "distancePc": 1.30119,
+      "distanceUpperErrorPc": 0.00034,
+      "distanceLowerErrorPc": -0.00035,
+      "hostRadiusSolar": 0.141,
+      "hostTemperatureK": 2900,
+      "orbitalSemiMajorAxisAu": 0.04848,
+      "hostHygIds": ["70666"],
+      "significantCompanions": [
+        { "hygId": "71456", "name": "Alpha Centauri A", "relationship": "wide stellar companion" },
+        { "hygId": "71453", "name": "Alpha Centauri B", "relationship": "wide stellar companion" }
+      ]
+    },
+    {
+      "planetName": "55 Cancri e",
+      "archivePlanetName": "55 Cnc e",
+      "hostName": "55 Cnc",
+      "rightAscensionDeg": 133.1468373,
+      "declinationDeg": 28.3298154,
+      "distancePc": 12.5855,
+      "distanceUpperErrorPc": 0.0124,
+      "distanceLowerErrorPc": -0.0123,
+      "hostRadiusSolar": 0.943,
+      "hostTemperatureK": 5172,
+      "orbitalSemiMajorAxisAu": 0.01544,
+      "hostHygIds": ["43464"],
+      "significantCompanions": [],
+      "companionNote": "The known wide companion 55 Cancri B is not a separate identified record in the pinned HYG input and is omitted rather than synthesized."
+    },
+    {
+      "planetName": "WASP-121 b",
+      "archivePlanetName": "WASP-121 b",
+      "hostName": "WASP-121",
+      "rightAscensionDeg": 107.6002312,
+      "declinationDeg": -39.0972705,
+      "distancePc": 269.898,
+      "distanceUpperErrorPc": 1.58,
+      "distanceLowerErrorPc": -1.562,
+      "hostRadiusSolar": 1.461,
+      "hostTemperatureK": 6628,
+      "orbitalSemiMajorAxisAu": 0.02571,
+      "hostHygIds": [],
+      "significantCompanions": []
+    },
+    {
+      "planetName": "Kepler-186 f",
+      "archivePlanetName": "Kepler-186 f",
+      "hostName": "Kepler-186",
+      "rightAscensionDeg": 298.652736,
+      "declinationDeg": 43.9549884,
+      "distancePc": 177.594,
+      "distanceUpperErrorPc": 0.774,
+      "distanceLowerErrorPc": -0.774,
+      "hostRadiusSolar": 0.523,
+      "hostTemperatureK": 3755,
+      "orbitalSemiMajorAxisAu": 0.432,
+      "hostHygIds": [],
+      "significantCompanions": []
+    }
+  ]
+}
