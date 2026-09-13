@@ -6,9 +6,10 @@ import { PlanetSelector } from "../components/explorer/planet-selector";
 import { PlanetOverview } from "../components/planet/planet-overview";
 import { ScienceHud } from "../components/planet/science-hud";
 import { EnterWorldTransition } from "../components/scene/enter-world-transition";
-import { PlanetScenePlaceholder } from "../components/scene/planet-scene-placeholder";
+import { PlanetSurface } from "../components/scene/planet-surface";
 import { deriveEnvironment } from "../lib/astronomy/environment";
 import { FEATURED_PLANETS, FEATURED_PLANETS_PROVENANCE } from "../lib/astronomy/planets-featured";
+import { deriveVisualEnvironment } from "../lib/astronomy/visual-environment";
 
 type View = "landing" | "overview" | "transition" | "world";
 
@@ -16,6 +17,7 @@ export default function Home() {
   const [selectedPlanet, setSelectedPlanet] = useState(FEATURED_PLANETS[0]);
   const [view, setView] = useState<View>("landing");
   const environment = useMemo(() => deriveEnvironment(selectedPlanet), [selectedPlanet]);
+  const visualEnvironment = useMemo(() => deriveVisualEnvironment(environment), [environment]);
 
   useEffect(() => {
     if (view !== "transition") return;
@@ -51,7 +53,11 @@ export default function Home() {
   if (view === "world") {
     return (
       <main className="world-page">
-        <PlanetScenePlaceholder planet={selectedPlanet} environment={environment} visualEnvironment={null} />
+        <PlanetSurface
+          planet={selectedPlanet}
+          environment={environment}
+          visualEnvironment={visualEnvironment}
+        />
         <header className="world-header">
           <button className="brand-button" type="button" onClick={() => setView("landing")}>ASTRA—NOMICAL</button>
           <span>{selectedPlanet.name}</span>
