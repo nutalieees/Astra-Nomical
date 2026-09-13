@@ -36,7 +36,9 @@ export function createSurface(v: VisualEnvironment, seed: number, clouds = false
   const count = segments + 1;
   const coordinates = Array.from({ length: count }, (_, i) => {
     const t = i / segments * 2 - 1;
-    return Math.sign(t) * t * t * 850;
+    // Cloud horizon is farther away because the observer floats above a giant.
+    // This extent is beyond every bounded scenario's tangent horizon in all azimuths.
+    return Math.sign(t) * t * t * (clouds ? 5000 : 850);
   });
   const positions = new Float32Array(count * count * 3);
   const indices: number[] = [];
@@ -46,7 +48,7 @@ export function createSurface(v: VisualEnvironment, seed: number, clouds = false
     const ramp = Math.min(1, distance / 28);
     const f = v.terrainFrequency;
     const hills = relief(x * f, z * f, seed) * v.terrainAmplitude;
-    const ridges = Math.exp(-Math.pow((z + 75) / 33, 2)) *
+    const ridges = Math.exp(-Math.pow((distance - 85) / 33, 2)) *
       (0.3 + Math.abs(relief(x * 0.038, z * 0.02, seed + 18))) * v.terrainAmplitude * 2.6;
     const curvature = -(x * x + z * z) / (2 * v.horizonRadius);
     const y = clouds ? curvature + relief(x * 0.013, z * 0.023, seed) * v.cloudHeight

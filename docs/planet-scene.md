@@ -36,14 +36,29 @@ foreground samples and a continuous coarse curved distance region. Five seeded
 noise octaves, micro-relief and a midground ridge supply different geological
 scales. Normals are recomputed; rough procedural materials need no textures.
 220 rocks share one instanced geometry/material and are embedded using sampled
-terrain heights. Their placement excludes the entire camera corridor.
+terrain heights. Rocks and ridges surround the observer through all 360 degrees;
+rock placement excludes the entire camera corridor.
 
-The camera samples the actual rendered triangles, retaining 2.8 units of rocky
-clearance throughout its bounded drift. Atmospheric eye height is independent
-of any ground. Reduced-motion preference pauses camera and cloud movement.
+One `ObserverCamera` owns every camera update. Before interaction it samples the
+actual rendered triangles, retaining 2.8 units of rocky clearance during bounded
+idle drift. The first interaction permanently pauses idle. Primary left-button
+or one-finger pointer drag changes unwrapped yaw and pitch bounded to ±85° using
+frame-independent damping. YXZ rotation has no roll; the position stays fixed
+after interaction. There is no orbit, pointer lock, or automatic return-to-center.
+RESET VIEW restores the original position and orientation and leaves idle paused.
+Pointer capture supports dragging out of Canvas and cancellation. Atmospheric eye
+height is independent of any ground. Reduced motion pauses idle and cloud motion.
 
-Clouds use three 120 × 120-cell curved layers, density shaders and differential
-motion. Background stars use one 1,200-point draw, dimmed with sky brightness.
+Rotation listeners are attached only to Canvas, never HUD panels. HUD input also
+pauses idle, but cannot turn the view. Canvas uses `touch-action: none`; scrollable
+HUD panels use `pan-y` and contained overscroll. Compact science metrics expand to
+all labels/assumptions; on narrow screens expanded science temporarily occupies
+the bottom dock, with Evolve Life available again when collapsed.
+
+Clouds use three 120 × 120-cell curved layers extending ±5000 scene units beyond
+the bounded giant scenarios' tangent horizons, density shaders and differential
+motion. The full sky shell lies at 8000 units inside the 10000-unit far plane.
+Background stars use one 1,200-point draw, dimmed with sky brightness.
 There is one 1024² shadow map, Canvas DPR is bounded to 1–1.5, no post-processing,
 no external assets, and no per-frame React state. GPU resources are disposed on
 world changes. This is not a full planetary walking simulator or volumetric
@@ -54,5 +69,6 @@ weather model; clouds remain visibly stylized, especially at grazing angles.
 `node --experimental-strip-types scripts/verify-planet-scene.cjs` (Node 24+)
 checks featured-world scenarios, deterministic geometry/mappings, finite invalid
 input fallbacks, upward unit normals, and independent raycast camera clearance
-across a complete repeating motion cycle. Also run `npm run typecheck` and
+across a complete repeating motion cycle, plus downward ray coverage in every
+15-degree azimuth at shallow, medium, and steep pitches. Also run `npm run typecheck` and
 `npm run build`, then inspect each featured demo world through the normal UI.

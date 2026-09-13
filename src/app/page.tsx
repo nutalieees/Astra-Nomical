@@ -57,6 +57,7 @@ export default function Home() {
           <span>{selectedPlanet.name}</span>
           <button className="text-button" type="button" onClick={() => setView("overview")}>CHANGE WORLD</button>
         </header>
+        <div className="world-hud">
         <ScienceHud
           planet={selectedPlanet}
           environment={environment}
@@ -64,6 +65,7 @@ export default function Home() {
           provenance={FEATURED_PLANETS_PROVENANCE[selectedPlanet.name]}
         />
         <EvolveLifePanel planet={selectedPlanet} environment={environment} />
+        </div>
       </main>
     );
   }

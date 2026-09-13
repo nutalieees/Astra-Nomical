@@ -124,3 +124,39 @@ button:focus-visible { outline: 2px solid #b7d9ff; outline-offset: 3px; }
 .hud-explainer h2 { color: #dce9ff; font-size: .54rem; letter-spacing: .11em; margin: 0 0 5px; text-transform: uppercase; }.hud-explainer p { margin: 0; }.source-summary { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }.source-summary span { border: 1px solid rgba(176, 210, 255, .18); color: #a8c9f0; font-size: .48rem; letter-spacing: .05em; padding: 2px 4px; }.hud-explainer ul { margin: 7px 0 0; padding-left: 14px; }.hud-explainer li { margin: 0 0 5px; }.visual-scenario { color: #e6d9bd; }
 
 @media (max-width: 700px) { .site-header, .world-header { padding: 20px; }.site-header > :last-child { display: none; }.landing-hero { left: 8vw; right: 7vw; }.landing-page footer { font-size: .48rem; left: 8vw; right: 6vw; }.planet-selector { margin: 4vh 5vw 0; }.planet-overview { margin: 9vh 7vw; }.overview-orb { height: 68vw; opacity: .55; right: -24vw; top: 45vh; width: 68vw; }.world-header > span { display: none; }.science-hud { bottom: 18px; left: 14px; max-width: 230px; }.science-hud .hud-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.evolve-panel { bottom: 18px; max-width: 205px; right: 14px; }.evolve-panel > p { font-size: .85rem; }.scene-placeholder-label { bottom: 29%; }.scene-placeholder-label p { max-width: 205px; } }
+
+/* Observer controls only receive Canvas gestures; HUD surfaces remain ordinary scrollable DOM. */
+.world-page { height: 100dvh; min-height: 100dvh; }
+.planet-surface canvas { cursor: grab; touch-action: none; user-select: none; }
+.planet-surface canvas.is-looking { cursor: grabbing; }
+.world-header { pointer-events: none; }
+.world-header button { pointer-events: auto; }
+.world-look-controls { position: absolute; z-index: 4; top: 76px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 18px; white-space: nowrap; pointer-events: none; }
+.world-look-controls span { font-size: .65rem; color: #c5cedb; text-shadow: 0 1px 4px #000; }
+.world-look-controls button { pointer-events: auto; min-height: 40px; padding: 8px 12px; background: rgba(7, 10, 17, .55); border: 1px solid var(--line); }
+.world-hud { position: absolute; z-index: 5; bottom: max(16px, env(safe-area-inset-bottom)); left: 20px; right: 20px; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; pointer-events: none; }
+.world-hud > * { pointer-events: auto; touch-action: pan-y; overscroll-behavior: contain; }
+.world-hud .science-hud, .world-hud .evolve-panel { position: relative; inset: auto; padding: 12px; max-height: 55dvh; overflow: auto; background: rgba(8, 12, 20, .76); }
+.world-hud .science-hud { width: 280px; max-width: 330px; }
+.world-hud .evolve-panel { width: 245px; max-width: 280px; }
+.world-hud .hud-grid { margin-top: 8px; gap: 0 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.world-hud .hud-grid div { min-height: 48px; padding: 6px 0 4px; }
+.world-hud .evolve-panel > p { font-size: .85rem; }
+.world-hud .evolve-panel .secondary-button { margin-top: 8px; padding: 10px 14px; min-height: 40px; }
+@media (max-width: 600px) {
+  .world-header { padding: 16px; }
+  .world-look-controls { top: 60px; gap: 8px; }
+  .world-look-controls span { font-size: .56rem; }
+  .world-look-controls button { font-size: .55rem; padding: 6px 8px; }
+  .world-hud { left: 10px; right: 10px; gap: 8px; }
+  .world-hud .science-hud { width: 58%; padding: 10px; }
+  .world-hud .evolve-panel { width: 42%; padding: 10px; }
+  .world-hud .science-hud.is-expanded { width: calc(100vw - 20px); max-width: none; }
+  .world-hud:has(.science-hud.is-expanded) .evolve-panel { display: none; }
+  .world-hud .hud-grid { gap: 0 5px; }
+  .world-hud .hud-grid dt { font-size: .45rem; letter-spacing: .03em; }
+  .world-hud .hud-grid dd { font-size: .58rem; }
+  .world-hud .evolve-panel .eyebrow { font-size: .48rem; }
+  .world-hud .evolve-panel > p { font-size: .75rem; }
+  .world-hud .simulation-toggle { font-size: .55rem; line-height: 1.4; }
+}

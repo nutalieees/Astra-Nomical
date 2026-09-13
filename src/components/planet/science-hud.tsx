@@ -60,7 +60,7 @@ export function ScienceHud({ planet, environment, provenance, visualEnvironment 
         <span className="hud-live-dot" aria-label="Live data" />
       </div>
       <dl className="hud-grid">
-        {rows.map((row) => (
+        {(expanded ? rows : rows.filter(row => ["RADIUS", "GRAVITY", "EQUILIBRIUM TEMP"].includes(row.label))).map((row) => (
           <div key={row.label}>
             <dt>{row.label}</dt>
             <dd>{row.value}</dd>

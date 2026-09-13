@@ -42,6 +42,22 @@ for (const planet of FEATURED_PLANETS) {
     }
     mesh.material.dispose(); surface.geometry.dispose(); duplicate.geometry.dispose();
   }
+  // Look down toward all surrounding azimuths: every ray must meet real geometry.
+  const atmospheric = visual.surfacePreset === 'gas-giant';
+  const surround = createSurface(visual, seedFromName(planet.name), atmospheric);
+  const surroundMesh = new Mesh(surround.geometry, new MeshBasicMaterial());
+  if (atmospheric) surroundMesh.position.y = -26;
+  surroundMesh.updateMatrixWorld(true);
+  const eyeHeight = atmospheric ? visual.cameraHeight : surround.heightAt(0, 12.25) + visual.cameraHeight;
+  const surroundRay = new Raycaster();
+  for (let degrees = 0; degrees < 360; degrees += 15) for (const pitch of [5, 45, 85]) {
+    const yaw = degrees * Math.PI / 180, down = pitch * Math.PI / 180;
+    surroundRay.set(new Vector3(0, eyeHeight, 12.25),
+      new Vector3(Math.sin(yaw) * Math.cos(down), -Math.sin(down), -Math.cos(yaw) * Math.cos(down)));
+    const hit = surroundRay.intersectObject(surroundMesh)[0];
+    assert(hit && hit.distance > 0.15 && hit.distance < 10000, `${planet.name}: missing surroundings at ${degrees}°/${pitch}°`);
+  }
+  surround.geometry.dispose(); surroundMesh.material.dispose();
   console.log(planet.name, JSON.stringify({ scenario: visual.surfacePreset, gravity: environment.gravityEarth,
     horizonRadius: visual.horizonRadius, starColor: visual.starColor, starRadiusDegrees: visual.starSize * 180 / Math.PI,
     light: visual.starIntensity }));
@@ -56,4 +72,4 @@ for (const radius of [undefined, NaN, Infinity, -1]) {
 assert.equal(deriveVisualEnvironment({ name: 'Rock', radiusEarth: 1 }, { ...base, temperatureCategory: 'temperate', gravityEarth: 0.8 }).surfacePreset, 'temperate-rock');
 assert.equal(deriveVisualEnvironment({ name: 'Giant', radiusEarth: 12 }, { ...base, gravityEarth: 3 }).surfacePreset, 'gas-giant');
 assert.equal(deriveVisualEnvironment({ name: 'Missing radius', category: 'gas-giant' }, base).surfacePreset, 'gas-giant');
-console.log('PASS: deterministic mappings, finite fallbacks, classification, normals and complete camera-cycle clearance.');
+console.log('PASS: deterministic mappings, finite fallbacks, classification, normals, camera-cycle clearance and 360° surrounding geometry.');

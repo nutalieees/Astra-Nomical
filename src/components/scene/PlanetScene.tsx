@@ -1,21 +1,23 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { BackSide, DoubleSide, Color, InstancedMesh, MeshStandardMaterial, Object3D, ShaderMaterial, Vector3 } from "three";
 import type { PlanetEnvironment } from "../../types/environment";
 import type { Planet } from "../../types/planet";
 import type { VisualEnvironment } from "../../types/visual-environment";
 import { createSurface, randomSource, seedFromName } from "./surface-geometry";
+import { ObserverCamera } from "./observer-camera";
 
 export interface PlanetSceneProps {
   planet: Planet;
   environment: PlanetEnvironment;
   visualEnvironment: VisualEnvironment;
+  resetView?: number;
 }
 
 /** The existing Canvas scene: all appearance comes from the visual mapper. */
-export function PlanetScene({ planet, visualEnvironment: v }: PlanetSceneProps) {
+export function PlanetScene({ planet, visualEnvironment: v, resetView = 0 }: PlanetSceneProps) {
   const seed = useMemo(() => seedFromName(planet.name), [planet.name]);
   const surface = useMemo(() => createSurface(v, seed, v.surfacePreset === "gas-giant"), [v, seed]);
   useEffect(() => () => surface.geometry.dispose(), [surface]);
@@ -33,31 +35,8 @@ export function PlanetScene({ planet, visualEnvironment: v }: PlanetSceneProps) 
     {v.surfacePreset === "gas-giant"
       ? <CloudDeck v={v} seed={seed} />
       : <RockySurface v={v} seed={seed} surface={surface} />}
-    <CameraDrift v={v} heightAt={surface.heightAt} />
+    <ObserverCamera v={v} heightAt={surface.heightAt} resetView={resetView} />
   </>;
-}
-
-function CameraDrift({ v, heightAt }: { v: VisualEnvironment; heightAt: (x: number, z: number) => number }) {
-  const { camera, gl } = useThree();
-  const reduced = useRef(false);
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => { reduced.current = media.matches; };
-    update(); media.addEventListener("change", update);
-    const previousExposure = gl.toneMappingExposure;
-    gl.toneMappingExposure = v.exposure;
-    return () => { gl.toneMappingExposure = previousExposure; media.removeEventListener("change", update); };
-  }, [gl, v]);
-  useFrame(({ clock }) => {
-    const t = reduced.current ? 0 : clock.elapsedTime;
-    const x = Math.sin(t * v.cameraSpeed) * v.cameraSway;
-    const z = 12 + Math.cos(t * v.cameraSpeed * 0.7) * 0.25;
-    // Rocky eye height follows the exact rendered triangle, with positive clearance.
-    const ground = v.surfacePreset === "gas-giant" ? 0 : heightAt(x, z);
-    camera.position.set(x, ground + v.cameraHeight, z);
-    camera.lookAt(x * 0.2, ground + v.cameraLookHeight, -90);
-  });
-  return null;
 }
 
 function RockySurface({ v, seed, surface }: { v: VisualEnvironment; seed: number; surface: ReturnType<typeof createSurface> }) {
@@ -99,7 +78,8 @@ function Rocks({ v, seed, heightAt }: { v: VisualEnvironment; seed: number; heig
   useLayoutEffect(() => {
     const random = randomSource(seed + 19), matrix = new Object3D(), color = new Color(v.groundColor);
     for (let index = 0; index < v.rockCount; index++) {
-      let x = (random() - 0.5) * 140, z = 18 - random() * 150;
+      const angle = random() * Math.PI * 2, distance = 10 + random() * 115;
+      let x = Math.cos(angle) * distance, z = 12 + Math.sin(angle) * distance;
       // Reserve the entire camera's movement corridor.
       if (Math.hypot(x, z - 12) < 6) x += x < 0 ? -8 : 8;
       const scale = (0.25 + Math.pow(random(), 3) * 3.3) * v.rockScale;
@@ -133,7 +113,7 @@ function Sky({ v }: { v: VisualEnvironment }) {
     haze: { value: v.atmosphereOpacity },
   }), [v]);
   return <mesh renderOrder={-10}>
-    <sphereGeometry args={[1450, 32, 24]} />
+    <sphereGeometry args={[8000, 48, 32]} />
     <shaderMaterial side={BackSide} depthWrite={false} uniforms={uniforms}
       vertexShader={`varying vec3 direction; void main(){direction=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`}
       fragmentShader={`varying vec3 direction;uniform vec3 zenith,horizon;uniform float haze;
