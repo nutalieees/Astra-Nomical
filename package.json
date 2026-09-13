@@ -10,6 +10,8 @@
     "stars:convert": "node scripts/convert-star-data.cjs",
     "stars:check": "node scripts/convert-star-data.cjs --check",
     "stars:test": "node scripts/convert-star-data.test.cjs",
+    "stars:enrich": "node scripts/enrich-arduino-stars.cjs",
+    "stars:enrich:check": "node scripts/enrich-arduino-stars.cjs --check",
     "skies:download": "node scripts/download-hyg.cjs",
     "skies:build": "node scripts/build-planet-skies.cjs",
     "skies:check": "node scripts/build-planet-skies.cjs --check",

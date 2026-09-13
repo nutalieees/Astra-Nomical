@@ -50,6 +50,11 @@ function magnitudeToRelativeFlux(apparentMagnitude, referenceMagnitude = 0) {
   return 10 ** (-0.4 * (apparentMagnitude - referenceMagnitude));
 }
 
+function catalogueDirectionToScene([x, y, z]) {
+  if (![x, y, z].every(Number.isFinite)) throw new Error('Catalogue direction must be finite');
+  return [x, z, -y];
+}
+
 function deriveDestinationStar(star, observerPositionPc, referenceMagnitude = 0) {
   const translated = translateObserver(star.positionPc, observerPositionPc);
   const apparentMagnitude = absoluteToApparentMagnitude(star.absoluteMagnitudeV, translated.distancePc);
@@ -66,5 +71,6 @@ module.exports = {
   apparentToAbsoluteMagnitude,
   absoluteToApparentMagnitude,
   magnitudeToRelativeFlux,
+  catalogueDirectionToScene,
   deriveDestinationStar,
 };

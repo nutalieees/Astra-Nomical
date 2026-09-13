@@ -1,6 +1,6 @@
 # Featured-planet sky caches
 
-This is the deterministic geometry and photometry stage described in [the exoplanet sky guide](exoplanet-sky-guide.md). It produces full celestial spheres for the five demo-safe worlds. It does not yet replace the scene renderer or apply a surface orientation.
+This is the deterministic geometry and photometry stage described in [the exoplanet sky guide](exoplanet-sky-guide.md). It produces full celestial spheres for the five demo-safe worlds. `CatalogueSky` now renders these buffers with a separate deterministic assumed orientation; the caches themselves remain orientation-independent.
 
 ## Reproduce the data
 
@@ -10,6 +10,8 @@ npm run skies:build
 npm run skies:test
 npm run skies:check
 ```
+
+To regenerate the exact-HIP audit of the original Arduino catalogue from the same cached raw input, also run `npm run stars:enrich` and `npm run stars:enrich:check`.
 
 `skies:download` obtains the HYG v4.1 CSV from a pinned upstream commit and verifies its SHA-256 before saving it as the ignored file `data/source/sky/hygdata_v41.csv`. The current NASA host-system response is normalized and checked in at `data/source/sky/featured-hosts-nasa.json`, together with the exact TAP query and retrieval date. The browser reads only generated files under `public/data/skies`; it never contacts HYG or NASA.
 
@@ -50,4 +52,12 @@ The `ASKY` binary header is 16 bytes: ASCII magic, unsigned 16-bit version, unsi
 - B−V becomes an approximate blackbody display color; it is not a spectral renderer.
 - The caches do not define “up,” surface latitude, local time, atmosphere, or visibility. Those remain explicit rendering scenarios.
 
+At runtime, natural exposure displays records through V=6.5 and enhanced exposure through the cache's V=10 limit. The shader compresses extreme flux ratios logarithmically for visibility; it does not modify the stored magnitudes. The assumed night-side/host-lit rotation moves the catalogue sphere, host direction, and primary light together. The sky group follows camera position only, so observer movement does not add artificial parallax.
+
 The focused checks cover coordinate axes, Earth-origin reconstruction, the five-magnitude/100×-flux distance rule, host exclusion, companion and Sun retention, finite normalized results, byte-for-byte deterministic packing, source checksums, and cache freshness.
+
+## Verification on 13 September 2026
+
+At a 1280×720 viewport in the Codex in-app browser, all five featured worlds reached the surface view and changed the local-sky status from loading to catalogue-backed. TRAPPIST-1 e and 55 Cancri e were visually sampled: the night-side view showed resolved stars behind an occluding terrain horizon, host-lit mode moved the host disc and scene lighting together, enhanced exposure toggled independently, and the controls did not overlap after adjustment. Exit returned to the selected overview, Back to Map restored the system picker, and the Evolve Life result still rendered for Kepler-186 f.
+
+The in-app browser intermittently reported WebGL context loss while still producing frames, so sustained frame rate, full 360-degree inspection, cloud transmission, and long-duration context stability were not measured. Those checks remain for the demo browser and hardware. The five local binaries were independently decoded and validated by the automated cache test.

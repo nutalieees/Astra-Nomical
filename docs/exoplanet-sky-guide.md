@@ -1,6 +1,6 @@
 # Reconstructing an exoplanet sky for Astra-Nomical
 
-Prepared 13 September 2026. Implementation guide; the application has not been modified.
+Prepared and implemented 13 September 2026. The first HYG-backed reconstruction is now integrated for all five featured worlds; this document also describes later scientific upgrades that remain optional.
 
 Build a catalogue-backed celestial sphere: locate stars in 3D, move the observer to the selected planetary system, recalculate directions and brightness, then render that sky through an explicitly assumed atmosphere. Start with cached skies for the five featured worlds.
 
@@ -229,6 +229,28 @@ interface CachedSky {
 Keep source IDs/provenance in a sidecar for picking and explanations. The manifest should also record catalogue version, query, checksum, coordinate frame, quality cuts, source count, photometric calibration, and orientation assumptions. Download catalogues during preparation, not when a visitor clicks Enter World. If a cached sky is unavailable, retain a clearly labelled illustrative fallback and preserve the surface experience.
 
 ## 8. Build order and acceptance checks
+
+### Implemented baseline
+
+The checked-in implementation uses pinned HYG v4.1 data and cached NASA host coordinates. `scripts/enrich-arduino-stars.cjs` audits the original 904 rows by exact nonzero HIP identity: 868 match usable HYG records, 24 have no HIP identifier, 12 remain unresolved, and none are ambiguous. Labels and original RGB565-derived colors remain in the audit; unmatched rows are never guessed from names or angular proximity. Run `npm run stars:enrich` from the cached raw HYG input and inspect `data/derived/arduino-star-enrichment.json`.
+
+`scripts/build-planet-skies.cjs` uses the broader valid HYG catalogue, rather than limiting the background to those 904 rows. It generates deterministic 20,000-record full-sphere buffers for every featured planet. The renderer loads those local buffers into one batched `Points` object, applies the explicit catalogue-to-Three axis conversion, keeps the shell centred on camera translation, and offers separate assumed night-side and enhanced-exposure controls. A failed asset load produces a labelled illustrative fallback.
+
+Regenerate and validate offline after the raw HYG CSV has been cached:
+
+```sh
+npm run stars:enrich
+npm run stars:enrich:check
+npm run skies:build
+npm run skies:test
+npm run skies:check
+npm run typecheck
+npm run build
+```
+
+HYG v4.1 is pinned to commit `3bf37f4b2d5460e1278286320d1d62fab9b493c1`, with URL, retrieval date, SHA-256, attribution, and CC BY-SA 4.0 terms in `data/source/sky/hyg-source.json` and the generated public `NOTICE.txt`. The raw 33.9 MB CSV stays ignored under `data/source/sky` and is not served by the application. The exact NASA TAP query, aliases, retrieval metadata, and host identity mappings are in `data/source/sky/featured-hosts-nasa.json`.
+
+This baseline does not propagate proper motion, model extinction, account for planetary orbital offsets or light-travel time, or repair HYG's Earth-selected incompleteness. HYG does not expose uniform distance uncertainties or quality flags for this audit, so those fields remain explicitly unavailable. The catalogue equinox/reference epoch and NASA coordinate metadata are documented separately; their J2000 alignment is an approximation at this visualisation's precision. Surface orientation and atmosphere remain deterministic presentation assumptions, not measurements.
 
 1. **First working version:** NASA destination positions + HYG; translate/recalculate offline; cache the five worlds; replace `Starfield`; expose assumed night/enhanced exposure.
 2. **Visual polish:** individual color/brightness, stable camera-centred sky, atmospheric attenuation, and a short star reveal when looking up.

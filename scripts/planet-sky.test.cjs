@@ -9,6 +9,7 @@ const {
   apparentToAbsoluteMagnitude,
   absoluteToApparentMagnitude,
   magnitudeToRelativeFlux,
+  catalogueDirectionToScene,
   deriveDestinationStar,
 } = require('./lib/sky-math.cjs');
 const { buildSky, writeBinary } = require('./build-planet-skies.cjs');
@@ -24,6 +25,13 @@ test('equatorial coordinate axes use the documented J2000 Cartesian basis', () =
   for (const [ra, dec, expected] of cases) {
     equatorialToCartesianPc(ra, dec, 1).forEach((value, index) => close(value, expected[index]));
   }
+});
+
+test('renderer-axis conversion preserves handedness and unit length', () => {
+  assert.deepEqual(catalogueDirectionToScene([1, 0, 0]), [1, 0, -0]);
+  assert.deepEqual(catalogueDirectionToScene([0, 1, 0]), [0, 0, -1]);
+  assert.deepEqual(catalogueDirectionToScene([0, 0, 1]), [0, 1, -0]);
+  close(Math.hypot(...catalogueDirectionToScene([0.6, 0, 0.8])), 1);
 });
 
 test('Earth-origin reconstruction preserves direction and apparent magnitude', () => {

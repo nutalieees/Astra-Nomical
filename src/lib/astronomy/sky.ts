@@ -39,6 +39,11 @@ export function magnitudeToRelativeFlux(apparentMagnitude: number, referenceMagn
   return 10 ** (-0.4 * (apparentMagnitude - referenceMagnitude));
 }
 
+/** Converts catalogue axes (X=RA 0h, Y=RA 6h, Z=north) to the scene's Y-up basis. */
+export function catalogueDirectionToScene([x, y, z]: CartesianVector): CartesianVector {
+  return [x, z, -y];
+}
+
 export function deriveDestinationStar(star: CatalogueStar, observerPositionPc: CartesianVector): DerivedSkyStar {
   const relative: CartesianVector = [
     star.positionPc[0] - observerPositionPc[0],
