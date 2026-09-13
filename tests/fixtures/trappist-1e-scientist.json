@@ -1,0 +1,22 @@
+[
+  {
+    "factor": "gravity",
+    "knownValue": "0.818 g (derived)",
+    "pressure": "Gravity constrains the energy required to move mass.",
+    "severity": "moderate",
+    "evidence": "Derived: environment.gravityEarth is calculated from supplied mass and radius."
+  },
+  {
+    "factor": "temperature",
+    "knownValue": "249.7 K (supplied)",
+    "pressure": "Low equilibrium temperature suggests potential thermal constraints.",
+    "severity": "high",
+    "evidence": "Known data: planet.equilibriumTemperatureK is supplied; surface temperature is unknown."
+  },
+  {
+    "factor": "radiation / stellar activity",
+    "pressure": "If stellar activity is significant, radiation could impose chemical stress.",
+    "severity": "moderate",
+    "evidence": "Unknown: no stellar activity or surface radiation measurements are supplied."
+  }
+]

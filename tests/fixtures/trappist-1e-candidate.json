@@ -1,0 +1,32 @@
+{
+  "name": "Conditional resting microfilm",
+  "summary": "A hypothetical simple cellular sheet. A compatible solvent and energy supply are unverified prerequisites; active survival is not established.",
+  "morphology": {
+    "size": "A submillimetre sheet, proposed rather than observed.",
+    "bodyPlan": "A thin connected layer with little vertical support.",
+    "locomotion": "No whole-body locomotion; a low movement budget.",
+    "surfaceCovering": "A repairable outer layer, with its protective value conditional on radiation exposure.",
+    "sensorySystems": "Local thermal response regulating activity; no image-forming eyes."
+  },
+  "adaptations": [
+    {
+      "environmentalPressure": "gravity",
+      "consequence": "Moving and supporting mass requires energy.",
+      "adaptation": "A small flat sheet without whole-body locomotion.",
+      "reasoning": "A low support and movement budget is compatible with the supplied gravity; it sacrifices relocation."
+    },
+    {
+      "environmentalPressure": "temperature",
+      "consequence": "If actual conditions are cold, active chemistry could be limited.",
+      "adaptation": "Local thermal sensing regulates reversible quiescence.",
+      "reasoning": "Reduced activity could conserve resources during cold intervals; it does not establish survival or imply that surface temperature equals equilibrium temperature."
+    },
+    {
+      "environmentalPressure": "radiation / stellar activity",
+      "consequence": "If radiation exposure is significant, chemical damage could occur.",
+      "adaptation": "A repairable outer cell layer provides limited protection.",
+      "reasoning": "If the unknown exposure warrants it, renewing this layer may reduce damage at an energetic cost; no radiation dose or invulnerability is claimed."
+    }
+  ],
+  "survivalStrategy": "A low-movement sheet with thermally regulated activity and conditional protection. Solvent and energy availability remain unverified; quiescence offers no guarantee of survival."
+}

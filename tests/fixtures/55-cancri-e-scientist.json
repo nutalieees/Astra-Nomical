@@ -1,0 +1,23 @@
+[
+  {
+    "factor": "temperature",
+    "knownValue": "1958 K (supplied)",
+    "pressure": "Extreme equilibrium heating severely constrains chemical stability; a viable actual surface environment is not established.",
+    "severity": "extreme",
+    "evidence": "Known data: planet.equilibriumTemperatureK is 1958 K; equilibrium temperature is not measured surface temperature."
+  },
+  {
+    "factor": "gravity",
+    "knownValue": "2.273 g (derived)",
+    "pressure": "Stronger gravity increases the cost of supporting and moving a given mass compared with Earth.",
+    "severity": "high",
+    "evidence": "Derived: environment.gravityEarth is calculated from the supplied mass and radius."
+  },
+  {
+    "factor": "illumination",
+    "knownValue": "2394.709 times Earth incident flux (derived)",
+    "pressure": "Intense incident flux makes radiative energy absorption a major constraint.",
+    "severity": "extreme",
+    "evidence": "Derived: environment.illumination describes incident flux, not guaranteed surface illumination; atmospheric shielding is unknown."
+  }
+]
