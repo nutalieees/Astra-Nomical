@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { EvolveLifePanel } from "../components/alien/evolve-life-panel";
-import { PlanetSelector } from "../components/explorer/planet-selector";
 import { ExoplanetField } from "../components/explorer/exoplanet-field";
 import { PlanetOverview } from "../components/planet/planet-overview";
 import { ScienceHud } from "../components/planet/science-hud";
@@ -26,11 +25,6 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, [view]);
 
-  const choosePlanet = (planet: (typeof FEATURED_PLANETS)[number]) => {
-    setSelectedPlanet(planet);
-    if (view !== "world") setView("overview");
-  };
-
   if (view === "landing") {
     return (
       <main className="landing-page">
@@ -53,9 +47,9 @@ export default function Home() {
           visualEnvironment={visualEnvironment}
         />
         <header className="world-header">
-          <button className="brand-button" type="button" onClick={() => setView("landing")}>ASTRA—NOMICAL</button>
+          <button className="brand-button" type="button" onClick={() => setView("overview")}>ASTRA—NOMICAL</button>
           <span>{selectedPlanet.name}</span>
-          <button className="text-button" type="button" onClick={() => setView("overview")}>CHANGE WORLD</button>
+          <button className="text-button" type="button" onClick={() => setView("overview")}>EXIT WORLD</button>
         </header>
         <div className="world-hud">
         <ScienceHud
@@ -72,9 +66,8 @@ export default function Home() {
 
   return (
     <main className="explorer-page">
-      <header className="site-header"><button className="brand-button" type="button" onClick={() => setView("landing")}>ASTRA—NOMICAL</button><span>CATALOGUE / 05 VERIFIED WORLDS</span></header>
-      <PlanetSelector planets={FEATURED_PLANETS} selectedPlanet={selectedPlanet} onSelect={choosePlanet} />
-      <PlanetOverview planet={selectedPlanet} environment={environment} onEnterWorld={() => setView("transition")} />
+      <header className="site-header"><button className="brand-button" type="button" onClick={() => setView("landing")}>ASTRA—NOMICAL</button><span>SELECTED WORLD / {selectedPlanet.name}</span></header>
+      <PlanetOverview planet={selectedPlanet} environment={environment} onEnterWorld={() => setView("transition")} onBackToMap={() => setView("landing")} />
       <div className={`overview-orb overview-${environment.temperatureCategory}`} aria-hidden="true"><i style={{ backgroundColor: environment.starColor }} /></div>
     </main>
   );
