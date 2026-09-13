@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "stars:convert": "node scripts/convert-star-data.cjs",
+    "stars:check": "node scripts/convert-star-data.cjs --check",
+    "stars:test": "node scripts/convert-star-data.test.cjs"
   },
   "dependencies": {
     "@react-three/fiber": "^9.7.0",
